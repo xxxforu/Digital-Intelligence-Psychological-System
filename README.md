@@ -1,4 +1,6 @@
-# yudada-frontend
+# Digital-Intelligence-Psychological-System
+
+## 个人学习用的数智心理测试平台，基于Vue3 + TS +ECharts + ArcoDesign 实现
 
 ## Project setup
 ```
