@@ -8,3 +8,10 @@ const ACCESS_ENUM = {
 };
 
 export default ACCESS_ENUM;
+
+// const ACCESS_ENUM = {
+//   NOT_LOGIN: "notLogin",  // 未登录
+//   STUDENT: "student",    // 学生
+//   TEACHER: "teacher",    // 普通老师
+//   PSYCHOLOGIST: "psychologist", // 心理老师
+// };
