@@ -1,18 +1,18 @@
 <template>
   <div id="app">
-    <template v-if="route.path.startsWith('/user')">
-      <router-view />
+    <template v-if="route.path.startsWith('/psychologist')">
+      <PsyLayout />
     </template>
     <template v-else>
-      <BasicLayout />
+      <router-view />
     </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import BasicLayout from "@/layouts/BasicLayout.vue";
 import { onMounted } from "vue";
 import { useRoute } from "vue-router";
+import PsyLayout from "./layouts/PsyLayout.vue";
 
 const route = useRoute();
 
@@ -28,4 +28,11 @@ onMounted(() => {
 });
 </script>
 
-<style scoped></style>
+<style scoped>
+#app {
+  width: 100vw;
+  height: 100vh;
+  background-color: #020308;
+  overflow: hidden;
+}
+</style>

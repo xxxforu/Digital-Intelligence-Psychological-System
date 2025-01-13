@@ -1,7 +1,6 @@
+import ACCESS_ENUM from "@/access/accessEnum";
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import { getLoginUserUsingGet } from "@/api/userController";
-import ACCESS_ENUM from "@/access/accessEnum";
 
 /**
  * 登录用户信息全局状态
@@ -16,9 +15,20 @@ export const useLoginUserStore = defineStore("loginUser", () => {
   }
 
   async function fetchLoginUser() {
-    const res = await getLoginUserUsingGet();
-    if (res.data.code === 0 && res.data.data) {
-      loginUser.value = res.data.data;
+    // const res = await getLoginUserUsingGet();
+    const res = {
+      code: 200,
+      msg: "success",
+      data: {
+        createTime: "2024",
+        id: 1111111,
+        updateTime: "2025",
+        userName: "pp水",
+        userRole: "psychologist",
+      }
+    }
+    if (res.code === 0 && res.data) {
+      loginUser.value = res.data;
     } else {
       loginUser.value = { userRole: ACCESS_ENUM.NOT_LOGIN };
     }

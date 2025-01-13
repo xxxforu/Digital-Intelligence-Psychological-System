@@ -1,7 +1,7 @@
-import router from "@/router";
-import { useLoginUserStore } from "@/store/userStore";
 import ACCESS_ENUM from "@/access/accessEnum";
 import checkAccess from "@/access/checkAccess";
+import router from "@/router";
+import { useLoginUserStore } from "@/store/userStore";
 
 // 进入页面前，进行权限校验
 router.beforeEach(async (to, from, next) => {
