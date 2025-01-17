@@ -1,17 +1,150 @@
-#index {
-    color: #d3d6dd;
-    width: 1920px;
-    height: 1080px;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    transform-origin: left top;
-    .bg {
-        width: 100%;
-        height: 100%;
-        background-image: url('../../assets/visualReport/background.png');
-        background-size: cover;
-        background-position: center center;
+#page {
+    width: 100vw;
+    height: 100vh;
+    background-color: #020308;
+    overflow: hidden;
+    #index {
+        color: #d3d6dd;
+        width: 1920px;
+        height: 1080px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        transform-origin: left top;
+        .bg {
+            width: 100%;
+            height: 100%;
+            background-image: url('../../assets/visualReport/background.png');
+            background-size: cover;
+            background-position: center center;
+            .host-body {
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                .vr-title {
+                    position: relative;
+                    img {
+                        width: 100%;
+                    }
+                    #title {
+                        color: white;
+                        font-size: 45px;
+                        font-weight: bold;
+                        position: absolute;
+                        left: 50%;
+                        top: 50%;
+                        transform: translate(-52%, -50%);
+                    }
+                    .left {
+                        width: fit-content;
+                        position: absolute;
+                        left: 0;
+                        top: 30px;
+                        .return {
+                            width: 30px;
+                            height: 30px;
+                        }
+                    }
+                    .right {
+                        display: flex;
+                        width: fit-content;
+                        position: absolute;
+                        right: 0;
+                        top: 30px;
+                         ::v-deep .arco-select {
+                            margin: 0 5px !important;
+                            .arco-select-view-value {
+                                font-size: 18px;
+                            }
+                        }
+                    }
+                }
+                 ::v-deep .dv-border-box-1 {
+                    .border-box-content {
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                    }
+                }
+                .firstLayer {
+                    display: flex;
+                    width: 100%;
+                    justify-content: space-between;
+                }
+                .secondLayer {
+                    margin-top: 30px;
+                    display: flex;
+                     ::v-deep .arco-carousel-item-current {
+                        width: 100%;
+                        display: flex;
+                        justify-content: space-between;
+                    }
+                }
+                .changePage {
+                    margin-top: 5px;
+                    width: 100%;
+                    display: flex;
+                    justify-content: space-between;
+                    .changePageButton {
+                        cursor: pointer;
+                        line-height: 47px;
+                        text-align: center;
+                        font-size: 20px;
+                        font-weight: bold;
+                        width: 94px;
+                        height: 47px;
+                        color: #fff;
+                        border-radius: 5px;
+                        padding: 0;
+                        background: radial-gradient(50.00% 50.00% at 50% 50%, rgb(77, 255, 223), rgb(77, 161, 255) 100%);
+                    }
+                }
+                .collectiveContent {
+                    .mutipleIntelligence {
+                        display: flex;
+                        justify-content: space-between;
+                        .pipeBox {
+                            padding-left: 20px;
+                            box-sizing: border-box;
+                            // width: 850px;
+                            height: 350px;
+                            margin-top: 50px;
+                            display: grid;
+                            grid-template-columns: repeat(4, 1fr);
+                            /* 两行均分高度 */
+                            column-gap: auto;
+                            /* 列间距自动计算 */
+                            align-content: space-between;
+                        }
+                    }
+                    .hollander {
+                        display: flex;
+                        justify-content: space-between;
+                        .pipeBox {
+                            padding-left: 20px;
+                            box-sizing: border-box;
+                            // width: 850px;
+                            height: 350px;
+                            margin-top: 50px;
+                            display: grid;
+                            grid-template-columns: repeat(3, 1fr);
+                            /* 两行均分高度 */
+                            column-gap: auto;
+                            /* 列间距自动计算 */
+                            align-content: space-between;
+                        }
+                    }
+                }
+            }
+            .leftLayer {
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+            }
+            .rightLayer {
+                height: 100%;
+            }
+        }
     }
 }

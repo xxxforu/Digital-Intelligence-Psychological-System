@@ -1,18 +1,18 @@
 <template>
   <div id="app">
-    <template v-if="route.path.startsWith('/psychologist')">
-      <PsyLayout />
+    <!-- <template v-if="route.path.startsWith('/psychologist') || route.path.startsWith('/teacher')">
+      <TeacherLayout />
     </template>
-    <template v-else>
+<template v-else>
       <router-view />
-    </template>
+    </template> -->
+    <router-view />
   </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted } from "vue";
 import { useRoute } from "vue-router";
-import PsyLayout from "./layouts/PsyLayout.vue";
 
 const route = useRoute();
 
@@ -26,13 +26,14 @@ const doInit = () => {
 onMounted(() => {
   doInit();
 });
+//background-color: #020308;
 </script>
 
 <style scoped>
 #app {
   width: 100vw;
   height: 100vh;
-  background-color: #020308;
+
   overflow: hidden;
 }
 </style>

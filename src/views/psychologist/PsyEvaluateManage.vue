@@ -1,10 +1,14 @@
-<script setup>
-import { ref, reactive } from 'vue'
-
-</script>
-
 <template>
-    <div>测评管理页</div>
+    <div>心理教师管理界面</div>
 </template>
 
-<style scoped></style>
+<script lang='ts'>
+export default ({
+    setup() {
+        components: { }
+        return {}
+    }
+})
+</script>
+
+<style lang='scss' scoped></style>

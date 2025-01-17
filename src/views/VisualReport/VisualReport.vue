@@ -1,5 +1,14 @@
 <script lang="ts">
+import DoubleColumn from '@/components/VisualComp/DoubleColumn.vue';
+import SignificantType from '@/components/VisualComp/Hollander/SignificantType.vue';
+import HorizontalColumn from '@/components/VisualComp/HorizontalColumn.vue';
+import PipeBoard from '@/components/VisualComp/PipeBoard.vue';
+import RadarBoard from '@/components/VisualComp/RadarBoard.vue';
+import ScrollText from '@/components/VisualComp/ScrollText.vue';
+import SecondaryAbility from '@/components/VisualComp/SocialFeeling/SecondaryAbility.vue';
+import TableBoard from '@/components/VisualComp/TableBoard.vue';
 import useDraw from '@/utils/useDraw';
+import { BorderBox1 as DvBorderBox1 } from '@kjgl77/datav-vue3';
 import {
     defineComponent,
     onMounted,
@@ -7,20 +16,48 @@ import {
     ref
 } from 'vue';
 export default defineComponent({
-    components: {},
+    components: {
+        TableBoard,
+        HorizontalColumn,
+        ScrollText,
+        SecondaryAbility,
+        RadarBoard,
+        SignificantType,
+        PipeBoard,
+        DoubleColumn,
+    },
+    computed: {
+        title() {
+            if (this.state.isPersonal) {
+                return '心理成长可视化大屏';
+            }
+            switch (this.currentType) {
+                case 1:
+                    return '多元智能体数据可视化大屏';
+                case 2:
+                    return '霍兰德集体数据大屏';
+                case 3:
+                    return 'MHT集体数据';
+                case 4:
+                    return '心理预警集体数据';
+                default:
+                    return '';
+            }
+        },
+    },
     setup() {
+        const borderRef = ref<InstanceType<typeof DvBorderBox1>>()
         //加载标识
         const loading = ref<boolean>(true)
         // * 适配处理
         const { appRef, calcRate, windowDraw, unWindowDraw } = useDraw()
         // 生命周期
         onMounted(() => {
-            console.log("onmounted");
-
             cancelLoading()
             // todo 屏幕适应
             windowDraw()
             calcRate()
+            borderRef.value?.initWH()
         })
 
         onUnmounted(() => {
@@ -35,177 +72,687 @@ export default defineComponent({
             }, 500)
         }
 
-        // return
+
+        var state = ref({
+            term: "current",
+            report: "latest",
+            isPersonal: false,
+        })
+        var currentType = ref(2)
+
+
+        const testSelectChange = (val: string | number) => {
+            currentType.value = Number(val); // 强制转换为数值型
+            console.log("val:", val, "currentType:", currentType.value);
+        };
+        const goToLastPage = () => {
+            currentType.value = currentType.value - 1
+            console.log("goToLastPage");
+
+        }
+        const goToNextPage = () => {
+            currentType.value = currentType.value + 1
+        }
+        // 要传给组件的数据
+        // personSocialFeeling
+        const PSFScrollText1 = ref([
+            {
+                title: "任务能力",
+                content: "你展现了出色的任务能力。你能够明确目标并制定详细的计划，同时以极高的标准和严谨的态度努力实现目标。你具备强烈的责任感，对任务的完成负责到底，并且能够自觉地承担起自己的职责。你拥有坚定的意志和坚定的信心，能够在面对困难和动摇时保持冷静和乐观，并找到克服困难的方法和策略。你的出色任务能力为团队的成功做出了重要的贡献。"
+            },
+            {
+                title: "情绪能力",
+                content: "你展现了出色的情绪能力。你能够有效地调节自己的情绪，保持稳定和积极的状态。无论遇到多大的压力和挑战，你都能以乐观和冷静的态度应对。你具备较强的抗压力，能够在压力下保持良好的心理状态，并找到解决问题的方法。你拥有很高的自我控制能力，在面对困难时能够保持冷静和理智的思考。你的情绪稳定性和积极的心态为周围的人带来了正能量，并在团队中起到了积极的影响。"
+            },
+            {
+                title: "关爱能力",
+                content: "你展现出了成熟的关爱能力。你敢于去爱，有勇气表达自己的爱意，并能够真诚而大方地接受他人的爱。你具备高度的共情力，能够深入了解他人的感受和需求，并通过实际行动表达你对他们的关心和支持。你建立了稳固的信任感，与他人建立了深厚的情感纽带，并且经常表达对他们的感激之情。"
+            }, {
+                title: "开放能力",
+                content: "你具备较高水平的开放能力。你有包容的心态，能够尊重和理解不同的观点和文化。你保持谦恭的心态，愿意倾听他人的意见和建议。你有较强的创造力和开放思维，能够适应不断变化的环境，并灵活应对新的挑战。你积极参与文化交流，接受并善于融合不同的全球文化。"
+            },
+            {
+                title: "领导能力",
+                content: "你具备较高水平的领导能力。你能够有效地调动资源，协调团队成员的工作并推动目标的实现。你具备一定的规划能力，能够制定明确的目标和行动计划。你在决策方面表现出一定的果断和明智，并愿意对决策结果负责。你的领导能力对于团队的成功起到了积极的推动作用。"
+            },
+            {
+                title: "学习能力",
+                content: "你具备一定水平的学习能力。你在观察力方面有所进步，能够较好地捕捉问题的关键点和重要信息。你能够一定程度上保持专注力，在学习过程中能够较为集中地进行学习。你的记忆力有待提高，可能需要更多的技巧和方法来帮助记忆学习的内容。你具备中等水平的学习能力，可以适应各种学习任务的需求。"
+            },
+        ])
+        const PSFScrollText2 = ref([
+            {
+                title: "共情力",
+                content: "你展现了高度的共情力。你能够真正设身处地地关怀他人的福祉，并表现出无私的付出和乐于助人的品质。你心地善良，充满爱心，总是愿意伸出援手帮助那些需要帮助的人。你对他人的困境和痛苦能够深入感同身受，你的关怀和支持总能给他们带来温暖与力量。你以他人的需要为重，努力为他人创造更美好的生活环境，成为他们的守护者和支持者。"
+            },
+            {
+                title: "信任感",
+                content: "你展现了高水平的信任感。你对他人普遍怀有善意的信念，愿意相信人性中的美好。你敞开心扉与他人交往，积极建立和发展友谊。你乐于去信任他人，坦诚相待，从而赢得了他人的信赖和友谊。你以真诚和宽容的态度对待他人，对待生活中的各种关系，展现出卓越的信任感和社交能力。"
+            },
+            {
+                title: "感恩力",
+                content: "你具备较高水平的感恩力。你经常意识到自己的幸运和受到的恩惠，从而自发地感到富足和感激。你懂得欣赏生活中的美好和感人之处，享受其中的喜悦和感动。你善于发现身边的一切可贵之处，对他人的善意和关爱表示感激。你以感恩的态度度过每一天，用心感受并回报所受到的恩情。"
+            }
+        ])
+        const PSFTableBoard = ref({
+            header: ['一级指标得分排名', '社会情感等级分布'],
+            data: [
+                ['任务能力', 'A-高',],
+                ['情绪能力', 'A-高',],
+                ['关爱能力', 'A-高',],
+                ['开放能力', 'B-较高',],
+                ['领导能力', 'B-较高',],
+                ['学习能力', 'C-中等',]
+            ],
+            rowNum: 6, //表格行数
+            // headerHeight: 35,
+            headerBGC: 'linear-gradient(rgba(116, 194, 255, 0.4), rgba(7, 125, 255, 0.4))',
+            oddRowBGC: '#0f1325', //奇数行
+            evenRowBGC: '#171c33', //偶数行
+            index: true,
+            // columnWidth: [50],
+            align: ['center']
+        })
+        const PSFHorizontalColumn = ref([
+            ['情绪能力', 88],
+            ['领导能力', 70],
+            ['关爱能力', 95],
+            ['任务能力', 92],
+            ['开放能力', 74],
+            ['学习能力', 55]
+        ])
+        // mutipleIntelligence
+        const MITableBoard = ref({
+            header: ['智能类型', '多元智能等级分级'],
+            data: [
+                ['语言言语智能', '5分/稍有优势',],
+                ['数据逻辑智能', '3分一般',],
+                ['视觉空间智能', '9分/有优势',],
+                ['音乐旋律智能', '7分/有优势',],
+                ['身体运动智能', '6分/稍有优势',],
+                ['人际关系智能', '8分/有优势',],
+                ['自我认知智能', '7分/有优势',],
+                ['自然观察智能', '8分/有优势',]
+
+            ],
+            rowNum: 8, //表格行数
+            // headerHeight: 35,
+            headerBGC: 'linear-gradient(rgba(116, 194, 255, 0.4), rgba(7, 125, 255, 0.4))',
+            oddRowBGC: '#0f1325', //奇数行
+            evenRowBGC: '#171c33', //偶数行
+            index: true,
+            // columnWidth: [50],
+            align: ['center']
+        })
+        const MIHorizontalColumn = ref([
+            ['语言言语智能', 5],
+            ['数据逻辑智能', 3],
+            ['视觉空间智能', 9],
+            ['音乐旋律智能', 7],
+            ['身体运动智能', 6],
+            ['人际关系智能', 8],
+            ['自我认知智能', 7],
+            ['自然观察智能', 8]
+        ])
+        const MIRadarBoard = ref({
+            value: [5, 3, 9, 7, 6, 8, 7, 8],
+            indicator: [
+                { text: '语言言语智能' },
+                { text: '数据逻辑智能' },
+                { text: '视觉空间智能' },
+                { text: '音乐旋律智能' },
+                { text: '身体运动智能' },
+                { text: '人际关系智能' },
+                { text: '自我认知智能' },
+                { text: '自然观察智能' },
+            ],
+        })
+        const MIScrollText1 = ref({
+            type: "核心智能详解",
+            dataList: [
+                {
+                    title: "语言言语智能",
+                    content: "该学生在言语-语言智能方面具有一定的优势。该学生对语言有一定的理解能力，能够处理日常的交流和基本的书面表达。该学生的语言学习能力适中，对新语言知识的掌握需要一定的时间和练习。在表达和沟通方面，该学生能够使用恰当的词汇和语法，尽管在复杂情境下可能需要进一步的练习和提高。该学生对语言的敏感性正在发展中，能够识别和使用一些修辞手法，但在创造性表达方面还有提升空间。通过持续的学习和实践，该学生有望提高自己的语言能力，更好地发掘和利用自己的言语-语言智能。"
+                },
+                {
+                    title: "数据逻辑智能",
+                    content: "该学生在逻辑-数学智能方面的表现处于平均水平。该学生在理解和应用数学概念及逻辑推理方面可能需要更多的努力和时间。在解决数学问题时，该学生可能在某些步骤上遇到困难，需要额外的指导和练习来提高解题技巧。在逻辑推理方面，该学生能够进行基本的思考，但在处理复杂的逻辑关系和抽象概念时可能会感到挑战。尽管如此，通过持续的学习和适当的指导，该学生完全有能力提高自己的逻辑-数学智能，增强解决问题和决策的能力。"
+                },
+                {
+                    title: "视觉空间智能",
+                    content: "该学生在视觉-空间智能方面展现出了非凡的才能和深刻的理解力。该学生对色彩、线条、形状、形式和空间关系的感知和理解能力非常强，这使得该学生在艺术、设计、建筑和导航等领域表现出色。该学生能够在心中轻松构建和操作复杂的空间图像，这种能力在解决空间问题和进行视觉创造时显得尤为突出。该学生在视觉艺术创作中展现出的创造力和表现力令人印象深刻，能够将抽象的视觉概念转化为具体的设计和作品。这种优势不仅体现在学术成绩上，也在日常决策和问题解决中发挥着重要作用。该学生对细节的注意力和空间想象力使该学生在需要空间想象力和视觉创造力的活动中能够迅速适应并表现出色。"
+                },
+                {
+                    title: "音乐旋律智能",
+                    content: "该学生在音乐-旋律智能方面展现出了非凡的才能和深刻的理解力。该学生对音乐的节奏、音调、旋律和音色有着极高的敏感性和理解力，这使得该学生在音乐创作、演奏和欣赏方面有着出色的才能。该学生能够准确地表达和传达音乐情感，对音乐的记忆力强，能够快速学习和掌握新的音乐作品。在音乐表演中，该学生能够展现出卓越的技巧和情感表达，无论是在独奏还是合奏中都能发挥关键作用。这种优势使该学生在音乐领域中能够迅速适应并表现出色，该学生对音乐的热爱和投入也常常激励着周围的人。该学生的音乐才能不仅在学术成绩上得到体现，也在日常生活中的音乐欣赏和创作中发挥着重要作用。"
+                },
+                {
+                    title: "身体运动智能",
+                    content: "该学生在身体-运动智能方面具有一定的优势，这使得该学生在体育和身体活动中比平均水平的学生更为出色。该学生对身体动作有一定的控制和协调能力，能够在体育和舞蹈等活动中表现出一定的技巧。虽然该学生可能不是每个运动领域的佼佼者，但该学生在某些特定的体育项目或活动中表现出了较高的潜力和兴趣。该学生可能在某些身体技巧上表现出色，如协调、平衡或力量，但在其他方面可能需要进一步的练习和提高。通过持续的锻炼和适当的指导，该学生有望提高自己的运动能力，更好地发掘和利用自己的潜力。"
+                },
+                {
+                    title: "人际关系智能",
+                    content: "该学生在人际关系智能方面表现出了卓越的能力和天赋。该学生对他人的情绪、意向、动机和感觉有着深刻的理解和洞察力，这使得该学生在与人交往时能够建立强有力的联系和信任。该学生能够准确地识别和解读他人的非言语信号，如面部表情、肢体语言和声音的微妙变化，这使该学生在社交场合中能够做出恰当的反应和调整。该学生的同理心和社交技巧使该学生成为团队中的协调者和领导者，能够有效地解决冲突和促进团队合作。这种优势不仅使该学生在个人关系中受到欢迎，也在需要团队合作和领导力的情境中发挥着重要作用。"
+                },
+                {
+                    title: "自我认知智能",
+                    content: "该学生在自我认识智能方面表现出了卓越的自我意识和深刻的自我理解。该学生对自己的长处和短处有着清晰的认识，能够准确地评估自己的能力和局限。这种自我认知使该学生能够在学习和生活中做出明智的决策，有效地规划自己的发展路径。该学生展现出高度的自我激励和自我调节能力，能够在面对挑战和压力时保持冷静和专注。该学生的自我反省能力使该学生能够从经验中学习，不断成长和进步。这种优势不仅帮助该学生在个人发展上取得成功，也使该学生在团队合作和领导力方面表现出色，因为该学生能够理解自己的行为如何影响他人。"
+                },
+                {
+                    title: "自我观察智能",
+                    content: "该学生在自然观察智能方面表现出了卓越的能力和深刻的理解。该学生对自然界的形态和模式有着敏锐的洞察力，能够准确地辨认和分类自然界中的各种生物和非生物元素。这种能力使该学生在户外活动、生态研究或环境科学等领域中表现出色。该学生对自然界的细微变化非常敏感，能够观察到其他人可能忽视的模式和联系。该学生的这种优势不仅体现在对自然世界的直接观察上，还体现在能够将这些观察与更广泛的环境问题和科学理论联系起来的能力。该学生对自然界的深刻理解和热爱，使该学生成为保护环境和促进可持续发展的积极倡导者。"
+                },
+            ]
+        })
+        const MIScrollText2 = ref([
+            {
+                title: "0503 新闻传播学类",
+                content: "本学科是研究关于新闻、传播、广告及出版相关内容的学科。它以社会新闻与信息传播活动为对象,从不同维度研究不同形态类型的新闻与信息传播活动与人类社会的关系。在近些年，其研究视野和范围大大扩展，网络传播、媒介文化、数字传播、信息和文化产业等已成为本学科研究的重要内容。"
+            },
+            {
+                title: "0201 经济学类",
+                content: "经济学是研究人类社会在各个发展阶段上的各种经济活动和各种相应的经济关系及其运行、发展的规律的科学。经济学是研究价值的生产、流通、分配、消费的规律的理论与应用的学科。经济学类专业针对的是整个经济领域的现象，主要培养具有深厚的经济学基础理论，适应综合经济管理、经济政策研究、理论研究和经济应用方面的人才。相对于应用经济学科，它更侧重于对经济现象的理论分析，为解决经济问题提供思路和方法。"
+            },
+            {
+                title: "0705 地理科学类",
+                content: "地理科学类是从各种角度对地质、地表形态等地理特征进行深入研究，同时也研究地域与人们生活关联的一门学科。本学科大致分为两大领域:以地形、地质、气候、海洋等自然环境为对象的自然地理学和以人口、城市、交通、文化等为对象的人文地理学，除此之外，还要进行大量的地理应用方面的研究。"
+            },
+            {
+                title: "0702 物理学类",
+                content: "物理学是研究物质的运动形态与相互作用的基本规律的科学。物理学的研究目的在于认识物质运动的普遍规律。本学科注重于研究物质、能量、空间、时间，尤其是它们各自的性质与彼此之间的相互关系。它是人们对无生命自然界中物质的转变的知识做出规律性的总结。它的理论结构充分地把数学作为自己的工作语言，将实验作为检验理论正确性的唯一标准， 作为自然科学的带头学科，从宏观到微观，物理学研究大至宇宙，小至基本粒子等一切物质最基本的运动形式和规律，因此成为其他各自然科学学科的研究基础。"
+            },
+            {
+                title: "0402 体育学类",
+                content: "体育学类是研究体育科学体系及其发展方向的一门学科，是研究和阐明运动训练过程的综合性应用学科。它通过体育训练和对人体解剖学、心理学、生理学等基础课及系列专业课的学习，对运动训练、运动负荷、训练过程的周期等问题进行研究，使毕业生达到系统掌握体育教育、竟技训练、运动保健等方面的基本理论、基本知识和基本技能，熟悉体育教学、运动训练、民族体育等方面的工作规律，并能在上述活动中从事教学、训练、管理、科研医疗等工作。"
+            },
+        ])
+        //hollander
+        const HLDHorizontalColumn = ref([
+            ['R-Realistic-技能型', 8],
+            ['I-Investigative-研究型', 7],
+            ['A-Artistic-艺术型', 9],
+            ['S-Social-社会型', 6],
+            ['E-Enterprise-经营型', 3],
+            ['C-Conventional-常规型', 6],
+        ])
+        const HLDRadarBoard = ref({
+            value: [8, 7, 9, 6, 3, 6],
+            indicator: [
+                { text: 'R-Realistic-技能型' },
+                { text: 'I-Investigative-研究型' },
+                { text: 'A-Artistic-艺术型' },
+                { text: 'S-Social-社会型' },
+                { text: 'E-Enterprise-经营型' },
+                { text: 'C-Conventional-常规型' },
+            ],
+        })
+        const HLDSignificantTypeList = ref([
+            { type0: "R", type1: "技能型", type2: "Realistic" },
+            { type0: "I", type1: "研究型", type2: "Investment" },
+            { type0: "R", type1: "艺术型", type2: "Artistic" },
+        ])
+        const HLDScrollText = ref([
+            {
+                type: "R-Realistic-技能型",
+                characters: "坦率、正直、诚实、谦逊。",
+                explain: "技能型的人是注重实际的。他们通常具备机械操作能力或一定的体力，适合与机械、工具、动植物等具体事物打交道，他们具有实干家的精神。这种人不善于社交活动，缺少对环境、他人的洞察力，感情也不是特别丰富，他们的注意力往往集中在物质的、实际的某一方面。他们喜欢安定，踏实稳重，遵守规则，善于进行某一专业领域内的研究。在职业选择上，他们希望从事有明确要求、需要一定技巧、按一定程序进行操作的工作，因此适合在技术领域的相关产业工作，如IT、电子通讯、信息技术等行业。",
+                examples: "喜欢修理各种家用电器、设备等；喜欢上实验课、劳技课等，因为可以操作实验设备、仪器；喜欢玩各种组装、拼装类玩具；喜欢打理花草、制作家具、缝制衣物、烹饪；喜欢户外运动、体育活动等。",
+                preferredWork: "电子信息科学与技术、光信息科学与技术、微电子学、信息安全、通信工程、电子信息工程、计算机科学与技术、软件开发、测控技术与仪器、电气工程及其自动化、数字媒体技术、材料学、材料物理、高分子材料与工程、飞行器设计与工程、飞行技术、武器系统与发射工程、机械设计及其自动化、车辆工程、给水排水工程、测绘工程、农业机械化及其自动化等专业。"
+            },
+            {
+                type: "I-Investigative-研究型",
+                characters: "谨慎、严格、严肃、内向、谦虚、独立性强。",
+                explain: "研究型的人是思想家而非实干家，抽象思维能力强。研究型的人对周围的环境不太敏感，与技能型不同的是，他们的洞察力很强，他们勤学好问、思维缜密，善于怀着强烈的好奇心观察分析、逻辑推理探究事物的本源。他们通常喜欢做统计分析，具备从事调查、观察、评价、推理等方面活动的能力。他们能够全神贯注于长期性地思索当中寻根问底，他们能够置身困惑当中思索头绪，他们能够在逆境中成就自己，任何能够给他们带来挑战的事物都能引起他们的兴趣。然而，这类人往往无法忍受繁文缛节、例行公事，因此，他们需要有科学分析创造性和成就感的工作。",
+                examples: "脑袋里常常有各种各样的“为什么”；与各类娱乐杂志相比，更喜欢翻阅科学、哲学等知识类书籍、材料；喜欢参加在脑力上更有挑战的活动和游戏，如下棋、推理游戏；平时可能话不多，但不人云亦云。",
+                preferredWork: "数学与应用数学、数理基础科学、物理学、应用物理学、化学、生物科学、地质学、冶金工程、微电子制造工程、临床医学、麻醉学、医学影像学、医学检验、海洋科学、心理学、生物工程、武器系统与发射工程、弹药工程与爆炸技术、特种能源工程与烟火技术、船舶与海洋工程、港口航道与海岸工程、交通运输、飞行技术、航海技术、轮机工程、物流工程、油气储运工程、车辆工程、地质学、地理信息系统等专业。"
+            },
+            {
+                type: "A-Artistic-艺术型",
+                characters: "浪漫、敏感、感性、情绪充沛、富有想象力。",
+                explain: "艺术型的人有创造力，乐于创造新颖、与众不同的成果，渴望表现自己的个性，实现自身的价值。做事理想化，追求完美，不重实际。艺术离不开天马行空的丰富想象力，艺术型的人往往自由奔放，不愿被约束，他们有理想、易冲动、有独创性，喜欢在非系统化活动中发挥自己的主观能动性，渴望在自由宽松的环境中实现自我，追求生活环境与个性的完美融合。同时，这种自由的性格也就决定了他们无法埋头钻研，进行思维缜密、逻辑顺畅的科学研究，他们无法忍受机械化的生活方式。因此，他们更适合于能够发挥主观想象力，没有固定规律、模式约束的工作类型。艺术型的人通常内心活动比较复杂、敏感、善于表达且富有想象力，他们不喜欢结构性强的活动，但他们情绪充沛，情感充盈，适合于从事艺术创作。",
+                examples: "喜欢欣赏各种形式的艺术作品；乐意参加文艺演出；没事写写自娱自乐的小文章、拍拍各类照片、听听音乐会（并非单纯的追星）、看看画展等。",
+                preferredWork: "艺术类专业、旅游管理、汉语言文学、新闻学、广播电视新闻学、广告学、编辑出版学、传播学、媒体创意、音乐学、绘画、摄影、英语及小语种等专业。除此之外，可考虑选择历史学、食品科学与工程、轻化工程、包装工程、印刷工程、纺织工程、服装设计与工程、园艺、植物保护、茶学、环境科学、生态学等专业。"
+            },
+        ])
+        //MHT
+        const MHTTableBoard = ref({
+            header: ['MHT类型', '分数/等级'],
+            data: [
+                ['对人焦虑', '9分/较高',],
+                ['学习焦虑', '8分/较高',],
+                ['孤独倾向', '7分/中等',],
+                ['自责倾向', '6分/中等',],
+                ['过敏倾向', '5分/中等',],
+                ['身体症状', '4分/中等',],
+                ['恐怖症状', '3分/较低',],
+                ['冲动倾向', '2分/较低',],
+                ['效度量表(测谎)', '1分/较低',]
+
+            ],
+            rowNum: 9, //表格行数
+            headerBGC: 'linear-gradient(rgba(116, 194, 255, 0.4), rgba(7, 125, 255, 0.4))',
+            oddRowBGC: '#0f1325', //奇数行
+            evenRowBGC: '#171c33', //偶数行
+            index: true,
+            align: ['center']
+        })
+        const MHTHorizontalColumn = ref([
+            ['对人焦虑', 9,],
+            ['学习焦虑', 8,],
+            ['孤独倾向', 7,],
+            ['自责倾向', 6,],
+            ['过敏倾向', 5,],
+            ['身体症状', 4,],
+            ['恐怖症状', 3,],
+            ['冲动倾向', 2,],
+            ['效度量表(测谎)', 1,]
+        ])
+        const MHTScrollText1 = ref([
+            {
+                title: "对人焦虑",
+                content: "该学生过分注重自己的形象,害怕与人交往,退缩。对人焦虑通常表现为过度关注自我,一切以自我为中心,怕见生人,在众人面前感到不安,不会与人交往,难以与同学、伙伴合作。独生子女,享受父母的娇惯和迁就,养成较强的自我中心意识,在人际交往方面的能力较弱,易产生对人焦虑的倾向；有的学生从小受到父母的严厉管教,形成了看大人脸色行事的软弱性格,这也是造成学生对人焦虑的另一原因。"
+            },
+            {
+                title: "学习焦虑",
+                content: "该学生表现出较高的学习焦虑水平，可能对考试有恐惧心理，难以安心专注于学习，过分在乎考试分数，这导致他们不能很好地应对学习和考试压力。这种焦虑可能源于应试教育的背景、社会升学压力、父母的高期望以及严厉的管教"
+            },
+            {
+                title: "孤独倾向",
+                content: "该学生能与他人保持正常的交往，没有表现出明显的孤独倾向。他们能够在社交场合中与他人互动，但可能不会特别主动。"
+            },
+            {
+                title: "自责倾向",
+                content: "在面对挫折和困难时,与常人表现一致,没有明显个体差异。"
+            },
+            {
+                title: "过敏倾向",
+                content: "属于中等水平,对日常事务一般不会过于敏感。"
+            },
+            {
+                title: "身体症状",
+                content: "身体会有一些小问题,但不影响生活和学习。"
+            },
+            {
+                title: "恐怖症状",
+                content: "恐怖倾向较弱,处于这一水平的受测者胆量偏大,基本不会对日常生活当中的情景,如黑暗、高地、独自睡觉或者某种特殊事物等感到紧张害怕。被测试者的心理安全感较高,不容易产生恐怖感,情绪平稳。"
+            },
+            {
+                title: "冲动倾向",
+                content: "冲动倾向较低,说明有很好的自制力,凡事三思而后行。"
+            },
+            {
+                title: "效度量表(测谎)",
+                content: "被测试者基本上是按照自己的真实情况对问题进行回答的，因此测验比较准确可靠。"
+            },
+
+        ])
+        const MHTScrollText2 = ref([
+            {
+                title: "对人焦虑",
+                content: "(1)首先希望受测者能够敞开心扉,和希望交往的朋友坦然而真诚的交流,不需要过于担心别人可能对自己做出的评价,完全可以自然、大方的呈现出自己的特点。\n(2)其次要相信自己的交往能力, 相信自己可以和他人相处融洽。自信是交往开始的基础。有的时候, 不是自己没有吸引对方的能力, 而是在交往之前, 就打了退堂鼓, 没有勇气和人交往。那么现在, 不要怀疑自己的能力, 至少在与人交流之前, 不要左思右想, 而是怀着自信, 勇敢而友善的同他人打交道, 朋友们会越来越多的。不要因为不自信, 放弃了与人交流的机会。\n(3)应当尝试多学习一些人际交往的技巧, 提高自己人际交往的能力。通过观察你身边社交能力强的同伴的做法, 比如如何找到双方均感兴趣的话题、如何倾听等等, 必定有助于进一步改善受测者的社交状况, 降低对人焦虑。"
+            },
+            {
+                title: "学习焦虑",
+                content: "该学生表现出较高的学习焦虑水平，可能对考试有恐惧心理，难以安心专注于学习，过分在乎考试分数，这导致他们不能很好地应对学习和考试压力。这种焦虑可能源于应试教育的背景、社会升学压力、父母的高期望以及严厉的管教"
+            },
+            {
+                title: "孤独倾向",
+                content: "该学生能与他人保持正常的交往，没有表现出明显的孤独倾向。他们能够在社交场合中与他人互动，但可能不会特别主动。"
+            },
+            {
+                title: "自责倾向",
+                content: "在面对挫折和困难时,与常人表现一致,没有明显个体差异。"
+            },
+            {
+                title: "过敏倾向",
+                content: "属于中等水平,对日常事务一般不会过于敏感。"
+            },
+            {
+                title: "身体症状",
+                content: "身体会有一些小问题,但不影响生活和学习。"
+            },
+            {
+                title: "恐怖症状",
+                content: "恐怖倾向较弱,处于这一水平的受测者胆量偏大,基本不会对日常生活当中的情景,如黑暗、高地、独自睡觉或者某种特殊事物等感到紧张害怕。被测试者的心理安全感较高,不容易产生恐怖感,情绪平稳。"
+            },
+            {
+                title: "冲动倾向",
+                content: "冲动倾向较低,说明有很好的自制力,凡事三思而后行。"
+            },
+            {
+                title: "效度量表(测谎)",
+                content: "被测试者基本上是按照自己的真实情况对问题进行回答的，因此测验比较准确可靠。"
+            },
+
+        ])
+
+        // 集体C
+        // mutipleIntelligence
+        const CMITableBoard = ref({
+            header: ['智能类型', '有优势', '其他', '有优势人数占比'],
+            data: [
+                ['语言言语智能', '32人', '16人', '67%'],
+                ['数据逻辑智能', '29人', '19人', '60%'],
+                ['视觉空间智能', '27人', '21人', '56%'],
+                ['音乐旋律智能', '25人', '23人', '52%'],
+                ['身体运动智能', '24人', '22人', '50%'],
+                ['人际关系智能', '23人', '24人', '48%'],
+                ['自我认知智能', '22人', '25人', '44%'],
+                ['自然观察智能', '21人', '26人', '42%']
+            ],
+            rowNum: 8, //表格行数
+            // headerHeight: 35,
+            headerBGC: 'linear-gradient(rgba(116, 194, 255, 0.4), rgba(7, 125, 255, 0.4))',
+            oddRowBGC: '#0f1325', //奇数行
+            evenRowBGC: '#171c33', //偶数行
+            index: true,
+            // columnWidth: [50],
+            align: ['center']
+        })
+        const CMIPieDataList = ref([
+            ['语言言语智能', 32, 16, 67],
+            ['数据逻辑智能', 29, 19, 60],
+            ['视觉空间智能', 27, 21, 56],
+            ['音乐旋律智能', 25, 23, 52],
+            ['身体运动智能', 24, 22, 50],
+            ['人际关系智能', 23, 24, 48],
+            ['自我认知智能', 22, 25, 44],
+            ['自然观察智能', 21, 26, 42]
+        ])
+        const CMIDoubleColumn = ref([
+            ['智能维度', '有优势', '其他'],
+            ['语言言语智能', 32, 16],
+            ['数据逻辑智能', 29, 19],
+            ['视觉空间智能', 27, 21],
+            ['音乐旋律智能', 25, 23],
+            ['身体运动智能', 24, 22],
+            ['人际关系智能', 23, 24],
+            ['自我认知智能', 22, 25],
+            ['自然观察智能', 21, 26]
+        ])
+        //hollander
+        const CHLDTableBoard = ref({
+            header: ['霍兰德类型', '显著', '其他', '显著人数占比'],
+            data: [
+                ['R-Realistic-技能型', '32人', '16人', '67%'],
+                ['I-Investigative-研究型', '29人', '19人', '60%'],
+                ['A-Artistic-艺术型', '27人', '21人', '56%'],
+                ['S-Social-社会型', '25人', '23人', '52%'],
+                ['E-Enterprise-经营型', '24人', '22人', '50%'],
+                ['C-Conventional-常规型', '23人', '24人', '48%'],
+            ],
+            rowNum: 6, //表格行数
+            headerBGC: 'linear-gradient(rgba(116, 194, 255, 0.4), rgba(7, 125, 255, 0.4))',
+            oddRowBGC: '#0f1325', //奇数行
+            evenRowBGC: '#171c33', //偶数行
+            index: true,
+            align: ['center']
+        })
+        const CHLDPieDataList = ref([
+            ['R-Realistic-技能型', 32, 16, 67],
+            ['I-Investigative-研究型', 29, 19, 60],
+            ['A-Artistic-艺术型', 27, 21, 56],
+            ['S-Social-社会型', 25, 23, 52],
+            ['E-Enterprise-经营型', 24, 22, 50],
+            ['C-Conventional-常规型', 23, 24, 48],
+        ])
+        const CHLDRadarBoard = ref({
+            value: [[8, 7, 9, 6, 3, 6], [6, 9, 7, 3, 2, 5]],
+            indicator: [
+                { text: 'R-Realistic-技能型' },
+                { text: 'I-Investigative-研究型' },
+                { text: 'A-Artistic-艺术型' },
+                { text: 'S-Social-社会型' },
+                { text: 'E-Enterprise-经营型' },
+                { text: 'C-Conventional-常规型' },
+            ],
+        })
+
+
+
+
+
         return {
             loading,
             appRef,
+            currentType,
+            state,
+            testSelectChange,
+
+            PSFScrollText1,
+            PSFScrollText2,
+            PSFTableBoard,
+            MITableBoard,
+            PSFHorizontalColumn,
+            MIHorizontalColumn,
+            MIRadarBoard,
+            MIScrollText1,
+            MIScrollText2,
+            goToLastPage,
+            goToNextPage,
+            HLDHorizontalColumn,
+            HLDRadarBoard,
+            HLDSignificantTypeList,
+            HLDScrollText,
+            MHTTableBoard,
+            MHTHorizontalColumn,
+            MHTScrollText1,
+            MHTScrollText2,
+            CMITableBoard,
+            CMIPieDataList,
+            CMIDoubleColumn,
+            CHLDTableBoard,
+            CHLDPieDataList,
+            CHLDRadarBoard,
         }
     },
 })
 </script>
 
 <template>
-    <div id="index" ref="appRef">
-        <div class="bg">
-            <dv-loading v-if="loading">Loading...</dv-loading>
-            <div v-else class="host-body">
-                <div class="vr-title">
-                    <img src="../../assets/visualReport/titleBG.png" alt="lost">
-                    <!-- <span id="title">心理成长可视化大屏</span> -->
+    <div id="page">
+        <div id="index" ref="appRef">
+            <div class="bg">
+                <dv-loading v-if="loading">Loading...</dv-loading>
+                <div v-else class="host-body">
+                    <div class="vr-title">
+                        <img src="../../assets/visualReport/titleBG.png" alt="lost">
+                        <span id="title">{{ title }}</span>
+                        <div class="left">
+                            <img src="../../assets/visualReport/return.png" alt="return" class="return">
+                        </div>
+                        <div class="right">
+                            <a-select
+                                :style="{ width: '130px', height: '50px', borderRadius: '10px', background: 'radial-gradient(50.00% 50.00% at 50% 50%, rgb(77, 255, 223), rgb(77, 161, 255) 100%)', color: '#fff', fontSize: '18px', fontWeight: 'bold' }"
+                                v-model="state.term">
+                                <a-option value="current">当前学期</a-option>
+                                <a-option value="first">上学期</a-option>
+                                <a-option value="second">下学期</a-option>
+                            </a-select>
+                            <a-select
+                                :style="{ width: '180px', height: '50px', borderRadius: '10px', background: 'radial-gradient(50.00% 50.00% at 50% 50%, rgb(77, 255, 223), rgb(77, 161, 255) 100%)', color: '#fff', fontSize: '18px', fontWeight: 'bold' }"
+                                v-model="currentType" @change="testSelectChange">
+                                <a-option :value="0" label="社会情感测试">社会情感测试</a-option>
+                                <a-option :value="1" label="多元智能测试">多元智能测试</a-option>
+                                <a-option :value="2" label="生涯规划测试">生涯规划测试</a-option>
+                                <a-option :value="4" label="MHT测试">MHT测试</a-option>
+                                <a-option :value="3" label="心理动态测试">心理预警测试</a-option>
+                            </a-select>
+                            <a-select
+                                :style="{ width: '130px', height: '50px', borderRadius: '10px', background: 'radial-gradient(50.00% 50.00% at 50% 50%, rgb(77, 255, 223), rgb(77, 161, 255) 100%)', color: '#fff', fontSize: '18px', fontWeight: 'bold' }"
+                                v-model="state.report">
+                                <a-option value="latest">最新报告</a-option>
+                                <a-option value="first">第一次报告</a-option>
+                                <a-option value="second">第二次报告</a-option>
+                            </a-select>
+                        </div>
+                    </div>
+                    <div class="visualContent personalContent" v-if="state.isPersonal">
+                        <div class="personSocialFeeling" v-if="currentType === 0">
+                            <div class="firstLayer">
+                                <!-- wid+50,height+50 -->
+                                <dv-border-box1 style="width: 530px;height:400px;">
+                                    <table-board :config="PSFTableBoard" :boxWidth="480" :boxHeight="350"
+                                        board-title="社会情感能力总得分" />
+                                </dv-border-box1>
+                                <dv-border-box1 style="width: 830px;height:400px;">
+                                    <horizontal-column :dataSource="PSFHorizontalColumn" :boxWidth="800"
+                                        :boxHeight="350" board-title="总览统计" :currentType="currentType" />
+                                </dv-border-box1>
+                                <dv-border-box1 style="width: 530px;height:400px;">
+                                    <scroll-text :data="PSFScrollText1" :boxWidth="480" :boxHeight="330"
+                                        board-title="分数解析" />
+                                </dv-border-box1>
+                            </div>
+                            <div class="secondLayer">
+                                <a-carousel :style="{
+                                    width: '100%',
+                                    height: '450px'
+                                }" :default-current="1" :auto-play="true">
+                                    <a-carousel-item v-for="item in 5">
+                                        <dv-border-box1 style="width: 830px;height:450px;">
+                                            <secondary-ability board-title="关爱能力详解" />
+                                        </dv-border-box1>
+                                        <dv-border-box1 style="width: 950px;height:450px;">
+                                            <scroll-text :data="PSFScrollText2" :boxWidth="900" :boxHeight="380"
+                                                board-title="关爱能力分数解析" />
+                                        </dv-border-box1>
+                                    </a-carousel-item>
+                                </a-carousel>
+                            </div>
+                        </div>
+                        <div class="mutipleIntelligence" v-else-if="currentType === 1">
+                            <div class="firstLayer">
+                                <dv-border-box1 style="width: 530px;height:400px;">
+                                    <table-board :config="MITableBoard" :boxWidth="480" :boxHeight="350"
+                                        board-title="多元智能得分排名" />
+                                </dv-border-box1>
+                                <dv-border-box1 style="width: 830px;height:400px;">
+                                    <horizontal-column :dataSource="MIHorizontalColumn" :boxWidth="800" :boxHeight="350"
+                                        board-title="总览统计" :currentType="currentType" />
+                                </dv-border-box1>
+                                <dv-border-box1 style="width: 530px;height:400px;">
+                                    <radar-board :data="MIRadarBoard" :boxWidth="500" :boxHeight="350"
+                                        board-title="多元智能维度分布" :currentType="currentType" />
+                                </dv-border-box1>
+                            </div>
+                            <div class="secondLayer">
+                                <dv-border-box1 style="width: 950px;height:450px;">
+                                    <scroll-text :data="MIScrollText1.dataList" :boxWidth="900" :boxHeight="380"
+                                        :board-title="MIScrollText1.type + '详解'" />
+                                </dv-border-box1>
+                                <dv-border-box1 style="width: 950px;height:450px;">
+                                    <scroll-text :data="MIScrollText2" :boxWidth="900" :boxHeight="380"
+                                        board-title="相关学科推荐" />
+                                </dv-border-box1>
+                            </div>
+                        </div>
+                        <div class="hollander" v-else-if="currentType === 2">
+                            <div class="firstLayer">
+                                <dv-border-box1 style="width: 480px;height:400px;">
+                                    <significant-type :data="HLDSignificantTypeList" :boxWidth="450" :boxHeight="350"
+                                        board-title="显著类型" />
+                                </dv-border-box1>
+                                <dv-border-box1 style="width: 830px;height:400px;">
+                                    <horizontal-column :dataSource="HLDHorizontalColumn" :boxWidth="800"
+                                        :boxHeight="350" board-title="总览统计" :currentType="currentType" />
+                                </dv-border-box1>
+                                <dv-border-box1 style="width: 620px;height:400px;">
+                                    <radar-board :data="HLDRadarBoard" :boxWidth="610" :boxHeight="350"
+                                        board-title="霍兰德维度分布" :currentType="currentType" />
+                                </dv-border-box1>
+                            </div>
+                            <div class="secondLayer">
+                                <dv-border-box1 style="width: 950px;height:450px;">
+                                    <scroll-text :data="HLDScrollText" :boxWidth="900" :boxHeight="380"
+                                        board-title="霍兰德类型详解" isHollander=true HLDTypeDetail=true />
+                                </dv-border-box1>
+                                <dv-border-box1 style="width: 950px;height:450px;">
+                                    <scroll-text :data="HLDScrollText" :boxWidth="900" :boxHeight="380"
+                                        board-title="维度解析" isHollander=true HLDDimensionDetail=true />
+                                </dv-border-box1>
+                            </div>
+                        </div>
+                        <div class="MHT" v-else-if="currentType === 3">
+                            <div class="firstLayer">
+                                <dv-border-box1 style="width: 530px;height:500px;">
+                                    <table-board :config="MHTTableBoard" :boxWidth="480" :boxHeight="450"
+                                        board-title="MHT得分排名" />
+                                </dv-border-box1>
+                                <dv-border-box1 style="width: 830px;height:500px;">
+                                    <horizontal-column :dataSource="MHTHorizontalColumn" :boxWidth="800"
+                                        :boxHeight="450" board-title="总览统计" :currentType="currentType" />
+                                </dv-border-box1>
+                                <dv-border-box1 style="width: 530px;height:500px;">
+                                    <scroll-text :data="MHTScrollText1" :boxWidth="480" :boxHeight="430"
+                                        board-title="MHT维度介绍" />
+                                </dv-border-box1>
+                            </div>
+                            <div class="secondLayer">
+                                <dv-border-box1 style="width: 1600;height:350px;">
+                                    <scroll-text :data="MHTScrollText2" :boxWidth="1580" :boxHeight="280"
+                                        board-title="辅导建议" />
+                                </dv-border-box1>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="visualContent collectiveContent" v-else>
+                        <div class="personSocialFeeling" v-if="currentType === 0"></div>
+                        <div class="mutipleIntelligence" v-else-if="currentType === 1">
+                            <div class="leftLayer">
+                                <dv-border-box1 style="width: 900px;height:450px;">
+                                    <table-board :config="CMITableBoard" :boxWidth="850" :boxHeight="400"
+                                        board-title="多元智能集体得分排名" />
+                                </dv-border-box1>
+                                <div class="pipeBox">
+                                    <PipeBoard v-for="(item, index) in CMIPieDataList" :key="index" :data="item"
+                                        :boxWidth="200" :boxHeight="150" />
+                                </div>
+                            </div>
+                            <div class="rightLayer">
+                                <dv-border-box1 style="width: 1000px;height:850px;">
+                                    <double-column :data-source="CMIDoubleColumn" :boxWidth="980" :boxHeight="800"
+                                        boardTitle="多元智能总览统计" />
+                                </dv-border-box1>
+                            </div>
+                        </div>
+                        <div class="hollander" v-else-if="currentType === 2">
+                            <div class="leftLayer">
+                                <dv-border-box1 style="width: 900px;height:450px;">
+                                    <table-board :config="CHLDTableBoard" :boxWidth="850" :boxHeight="400"
+                                        board-title="霍兰德显著类型排名" :isHollander="true" />
+                                </dv-border-box1>
+                                <div class="pipeBox">
+                                    <PipeBoard v-for="(item, index) in CHLDPieDataList" :key="index" :data="item"
+                                        :boxWidth="250" :boxHeight="150" :isHollander="true" />
+                                </div>
+                            </div>
+                            <div class="rightLayer">
+                                <dv-border-box1 style="width: 1000px;height:850px;">
+                                    <radar-board :data="CHLDRadarBoard" :boxWidth="980" :boxHeight="800"
+                                        board-title="霍兰德集体统计" :currentType="currentType" :radius="250"
+                                        :isDouble="true" />
+                                </dv-border-box1>
+                            </div>
+                        </div>
+                        <div class="MHT" v-else-if="currentType === 3"></div>
+                    </div>
+
+                    <div class="changePage">
+                        <button class="lastPage changePageButton" @click="goToLastPage"
+                            :disabled="currentType === 0">上一页</button>
+                        <button class="nextPage changePageButton" @click="goToNextPage"
+                            :disabled="currentType === 4">下一页</button>
+                    </div>
+
+
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- <div id="visualReport" class="main">
-            <div class="main_con">
-                <div class="main_top">
-                    <div class="main_top_middle">
-                        <div class="main_top_middle_top_title">
-                            <img class="title_bg" src="../../assets/visualReport/title_bg.png"> 政务服务大数据可视化监管平台
-                        </div>
-                        <div class="main_top_middle_num_title">案件公开数量</div>
-                        <div class="main_top_middle_num">
-                            <div class="main_top_middle_num_list">
-                                <img src="../../assets/visualReport/center_num.png">
-                                <p class="main_top_middle_num_list5">0</p>
-                            </div>
-                            <div class="main_top_middle_num_list">
-                                <img src="../../assets/visualReport/center_num.png">
-                                <p class="main_top_middle_num_list4">0</p>
-                            </div>
-                            <div class="main_top_middle_num_list">
-                                <img src="../../assets/visualReport/center_num.png">
-                                <p class="main_top_middle_num_list3">0</p>
-                            </div>
-                            <div class="main_top_middle_num_list">
-                                <img src="../../assets/visualReport/center_num.png">
-                                <p class="main_top_middle_num_list2">0</p>
-                            </div>
-                            <div class="main_top_middle_num_list">
-                                <img src="../../assets/visualReport/center_num.png">
-                                <p class="main_top_middle_num_list1">0</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-        </div> -->
 </template>
 
-<style scoped>
+<style lang="scss" scoped>
 @import '../../assets/scss/visualReport.scss';
 </style>
-<!-- <style scoped>
-#visualReport {
-    width: 100%;
-    overflow-y: auto;
-    background-color: black;
-    transform-origin: center center;
-}
-
-.main_con {
-    position: absolute;
-    width: 97%;
-    height: 95%;
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    margin: auto;
-    /* background: white; */
-}
-
-.main_top {
-    width: 100%;
-    height: 37%;
-}
-
-.main_top_middle {
-    float: left;
-    width: 63%;
-    height: 100%;
-    margin-left: 1.2%;
-}
-
-.main_top_middle_top_title {
-    position: relative;
-    width: 100%;
-    text-align: center;
-    font-size: 1.7vw;
-    font-weight: bold;
-    color: #0EFCFF;
-    height: 14%;
-}
-
-.main_top_middle_top_title .title_bg {
-    position: absolute;
-    left: 7%;
-    top: -20%;
-    width: 86%;
-    height: 140%;
-}
-
-.main_top_middle_top_title .title_bg {
-    position: absolute;
-    left: 7%;
-    top: -20%;
-    width: 86%;
-    height: 140%;
-}
-
-.main_top_middle_num_title {
-    float: left;
-    color: #0EFCFF;
-    font-size: 1.5vw;
-    margin-left: 13%;
-    line-height: 4.5vw;
-    width: 18%;
-    margin-top: .5vw;
-}
-
-.main_top_middle_num_title {
-    float: left;
-    color: #0EFCFF;
-    font-size: 1.5vw;
-    margin-left: 13%;
-    line-height: 4.5vw;
-    width: 18%;
-    margin-top: .5vw;
-}
-
-.main_top_middle_num {
-    float: left;
-    width: 55%;
-    height: 23%;
-    margin: .7% auto;
-    margin-top: 1.5%;
-}
-
-.main_top_middle_num_list {
-    position: relative;
-    float: left;
-    height: 100%;
-    width: 12%;
-    margin-left: 2.6%;
-    font-size: 2vw;
-    font-weight: bold;
-    color: #0EFCFF;
-    line-height: 240%;
-}
-
-.main_top_middle_num_list p {
-    text-align: center;
-}
-
-.main_top_middle_num_list:nth-child(1) {
-    margin-left: 0;
-}
-
-.main_top_middle_num_list img {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-}
-</style> -->

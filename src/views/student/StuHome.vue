@@ -1,5 +1,5 @@
 <template>
-    <div>数据看板入口</div>
+    <div>心理学生端首页</div>
 </template>
 
 <script lang='ts'>

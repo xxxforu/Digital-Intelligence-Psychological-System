@@ -1,5 +1,5 @@
 <template>
-    <div>数据看板入口</div>
+    <div>普通教师查看可视化入口</div>
 </template>
 
 <script lang='ts'>

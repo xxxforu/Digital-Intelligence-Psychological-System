@@ -1,11 +1,12 @@
 <template>
-    <div>数据看板入口</div>
+    <div>查看测评题目列表</div>
 </template>
 
 <script lang='ts'>
-export default ({
+import { defineComponent } from 'vue';
+export default defineComponent({
     setup() {
-        components: { }
+
         return {}
     }
 })

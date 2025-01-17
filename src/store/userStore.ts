@@ -32,6 +32,8 @@ export const useLoginUserStore = defineStore("loginUser", () => {
     } else {
       loginUser.value = { userRole: ACCESS_ENUM.NOT_LOGIN };
     }
+    console.log(loginUser.value);
+    
   }
 
   return { loginUser, setLoginUser, fetchLoginUser };
