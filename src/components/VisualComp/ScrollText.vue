@@ -140,8 +140,6 @@ export default defineComponent({
     flex-direction: column;
     //滚动速度
     animation: scroll 35s linear infinite;
-
-
 }
 
 .scroll-item {

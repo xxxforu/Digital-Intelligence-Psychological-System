@@ -2,10 +2,14 @@
 import DoubleColumn from '@/components/VisualComp/DoubleColumn.vue';
 import SignificantType from '@/components/VisualComp/Hollander/SignificantType.vue';
 import HorizontalColumn from '@/components/VisualComp/HorizontalColumn.vue';
+import CollectiveDimensionBoard from '@/components/VisualComp/MHT/CollectiveDimensionBoard.vue';
 import PipeBoard from '@/components/VisualComp/PipeBoard.vue';
 import RadarBoard from '@/components/VisualComp/RadarBoard.vue';
 import ScrollText from '@/components/VisualComp/ScrollText.vue';
+import LevelStage from '@/components/VisualComp/SocialFeeling/LevelStage.vue';
+import PieBoard from '@/components/VisualComp/SocialFeeling/PieBoard.vue';
 import SecondaryAbility from '@/components/VisualComp/SocialFeeling/SecondaryAbility.vue';
+import SecondaryDetail from '@/components/VisualComp/SocialFeeling/SecondaryDetail.vue';
 import TableBoard from '@/components/VisualComp/TableBoard.vue';
 import useDraw from '@/utils/useDraw';
 import { BorderBox1 as DvBorderBox1 } from '@kjgl77/datav-vue3';
@@ -25,6 +29,10 @@ export default defineComponent({
         SignificantType,
         PipeBoard,
         DoubleColumn,
+        CollectiveDimensionBoard,
+        LevelStage,
+        SecondaryDetail,
+        PieBoard,
     },
     computed: {
         title() {
@@ -37,7 +45,7 @@ export default defineComponent({
                 case 2:
                     return '霍兰德集体数据大屏';
                 case 3:
-                    return 'MHT集体数据';
+                    return 'MHT集体数据可视化数据';
                 case 4:
                     return '心理预警集体数据';
                 default:
@@ -78,7 +86,7 @@ export default defineComponent({
             report: "latest",
             isPersonal: false,
         })
-        var currentType = ref(2)
+        var currentType = ref(0)
 
 
         const testSelectChange = (val: string | number) => {
@@ -427,6 +435,46 @@ export default defineComponent({
         ])
 
         // 集体C
+        //personSocialFeeling
+        const CPSFLevel = ref({
+            levelName: "关爱能力",
+            level: "A",
+            percent: 57,
+            describe: [
+                {
+                    title: "概述",
+                    content: "关爱能力概况描述：内容：学生在班级和社交活动中表现出积极的态度，愿意主动关心和帮助他人。他们在面对需要帮助的人时能够伸出援手，展现出同情心和爱心    勇于表达爱描述：学生在表达爱意方面表现优秀，能够自然地表达对他人的关心和爱意。内容：学生能够根据不同情境和对象选择合适的表达方式，包括言语和行动上的表达。他们在公共场合和私人场合都能够自信地表达爱意，建立起健康的人际关系    不怯于接受爱描述：大多数学生能够坦然接受他人的爱和关怀，并能够给予积极的反馈。内容：学生能够感受到他人的温暖和关怀，并能够建立起健康的人际关系。他们认识到接受爱的重要性，并能够在日常生活中实践和体现这种能力。"
+                }
+            ],
+            secondLevel: [
+                {
+                    levelName: "共情力",
+                    percent: 61,
+                    level: "A",
+                    describe: "共情力是指个体设身处地对他人的福祉进行考量和关怀，并愿意主动给予他人帮助的品质。高共情力者心地善良、有爱心、乐于助人、不自私、不冷漠。"
+                },
+                {
+                    levelName: "信任感",
+                    percent: 51,
+                    level: "A",
+                    describe: "信任感是指一个人愿意相信其他人普遍都是怀有善意的心态。高信任感的人更乐意打开心扉与他人交往，也因而更容易收获友谊。"
+                },
+                {
+                    levelName: "感恩力",
+                    percent: 71,
+                    level: "A",
+                    describe: "感恩力是指人能够经常性地意识到自己被给予、被恩赐、被爱、是幸运的从而感到富足并自发性地产生感激情感的努力。高感恩力个体知足、常乐，因为他们善于发现生活中的感动并能享受这一感动。"
+                },
+            ]
+        })
+        const CPSFPie = ref([
+            { value: 55, name: '学习能力' },
+            { value: 74, name: '开放能力' },
+            { value: 92, name: '任务能力' },
+            { value: 95, name: '关爱能力' },
+            { value: 70, name: '领导能力' },
+            { value: 80, name: '情绪能力' }
+        ])
         // mutipleIntelligence
         const CMITableBoard = ref({
             header: ['智能类型', '有优势', '其他', '有优势人数占比'],
@@ -460,15 +508,15 @@ export default defineComponent({
             ['自然观察智能', 21, 26, 42]
         ])
         const CMIDoubleColumn = ref([
-            ['智能维度', '有优势', '其他'],
-            ['语言言语智能', 32, 16],
-            ['数据逻辑智能', 29, 19],
-            ['视觉空间智能', 27, 21],
-            ['音乐旋律智能', 25, 23],
-            ['身体运动智能', 24, 22],
-            ['人际关系智能', 23, 24],
-            ['自我认知智能', 22, 25],
-            ['自然观察智能', 21, 26]
+            //['智能维度', '有优势', '其他'],
+            ['语言言语智能', 32],
+            ['数据逻辑智能', 29],
+            ['视觉空间智能', 27],
+            ['音乐旋律智能', 25],
+            ['身体运动智能', 24],
+            ['人际关系智能', 23],
+            ['自我认知智能', 22],
+            ['自然观察智能', 21]
         ])
         //hollander
         const CHLDTableBoard = ref({
@@ -497,7 +545,7 @@ export default defineComponent({
             ['C-Conventional-常规型', 23, 24, 48],
         ])
         const CHLDRadarBoard = ref({
-            value: [[8, 7, 9, 6, 3, 6], [6, 9, 7, 3, 2, 5]],
+            value: [8, 7, 9, 6, 3, 6],
             indicator: [
                 { text: 'R-Realistic-技能型' },
                 { text: 'I-Investigative-研究型' },
@@ -507,6 +555,57 @@ export default defineComponent({
                 { text: 'C-Conventional-常规型' },
             ],
         })
+        //MHT
+        const CMHTBoardList = ref([
+            {
+                dimensionName: "对人焦虑解释与建议",
+                percent: 55,
+                levelExplain: "本次评估结果显示，有较高比例的学生在对人焦虑方面处于中等水平。这意味着大部分学生在人际交往中能够保持相对正常的状态，但仍有部分学生可能会在某些社交场合或特定情境下感到一定的焦虑和不适应。这种情况提示我们，需要关注学生在不同人际交往环境下的适应能力和心理状态。",
+                suggestion: "1.强化社交适应能力培养：通过开展多样化的社交实践活动，如模拟社交场景、角色扮演、团队合作项目等，让学生在实际操作中提升社交适应能力，学会在不同情境下灵活应对和调整自己的行为。\n2.增加同伴互助与支持：鼓励学生之间建立互助小组或学习小组，分享彼此在人际交往中的经验和困惑，相互支持和鼓励。同伴之间的交流和理解有助于缓解焦虑情绪，增强学生的归属感和安全感。\n3.提供心理教育与指导：开展心理健康教育课程或讲座，普及人际交往焦虑的相关知识，让学生了解焦虑的成因、表现及应对方法。同时，为有需要的学生提供心理咨询服务，帮助他们更好地应对人际交往中的焦虑问题。"
+            },
+            {
+                dimensionName: "学习焦虑解释与建议",
+                percent: 73,
+                levelExplain: "在本次学习焦虑评估中，有70%及以上的学生表现出较低的学习焦虑水平。这表明大多数学生能够以较为平和的心态面对学习任务和考试，不会受到过度的焦虑情绪困扰，能够正确对待学业成绩。这种情况为学校营造了一个积极向上的学习氛围，有利于学生的学业发展和心理健康。然而，仍需关注那些表现出较高学习焦虑的学生，确保他们也能得到有效的支持和帮助。",
+                suggestion: "1.继续营造良好的学习环境：保持并进一步优化学校的教学环境和学习氛围，为学生提供一个安静、舒适、充满活力的学习空间。鼓励教师采用多样化的教学方法和手段，激发学生的学习兴趣和积极性，让学生在轻松愉悦的环境中学习。\n2.鼓励学生自主学习：引导学生树立自主学习的意识，培养良好的学习习惯和自我管理能力。鼓励学生根据自己的兴趣和目标，制定合理的学习计划，主动探索和学习，提高学习的主动性和自觉性，从而进一步降低学习焦虑。\n3.关注少数焦虑学生：虽然大部分学生的学习焦虑水平较低，但仍需关注那些表现出较高焦虑的学生。为他们提供个性化的辅导和支持，如一对一的学习指导、心理咨询服务等，帮助他们分析焦虑的原因，制定应对策略，逐步克服学习焦虑，融入集体学习生活。\n4.加强生涯规划教育：开展生涯规划教育课程或活动，帮助学生了解自己的兴趣、特长和发展方向，明确学习目标和职业规划。让学生认识到学习不仅仅是为了应对考试，而是为了实现个人的成长和发展，从而以更加积极的态度面对学习，减少因目标不明确而产生的焦虑。"
+            },
+            {
+                dimensionName: "孤独倾向解释与建议",
+                percent: 45,
+                levelExplain: "本次评估结果显示，有40%-60%的学生在孤独倾向方面处于中等水平。这意味着大多数学生在人际交往中能够保持相对正常的状态，但仍有部分学生可能会在某些社交场合或特定情境下感到一定的孤独和不适应。这种情况可能源于学生对社交环境的适应能力、自我认知以及社交需求等因素的差异。虽然中等水平的孤独倾向在一定程度上是正常的，但若不加以引导和关注，也可能逐渐影响学生的社交发展和心理健康。",
+                suggestion: "1.提供多样化的社交平台：学校应为学生提供多样化的社交平台和活动，如兴趣小组、社团组织、志愿者活动等，让学生能够根据自己的兴趣和特长选择适合自己的社交方式。通过参与这些活动，学生可以结识志同道合的朋友，满足社交需求，减少孤独感。\n2.加强自我认知教育：开展自我认知教育课程或活动，帮助学生了解自己的性格特点、优势和不足。通过自我认知，学生可以更好地理解自己的孤独倾向，明确自己的社交需求和期望，从而更有针对性地提升社交技能和建立良好的人际关系。\n3.鼓励主动交往：鼓励学生在社交活动中主动与他人交往，如主动发起话题、参与小组讨论、邀请他人参加活动等。教师和家长也可以为学生创造更多的社交机会，如组织家庭聚会、社区活动等，让学生在实践中锻炼社交能力，增强与他人建立联系的信心。\n4.关注少数高孤独倾向学生：虽然大部分学生的孤独倾向处于中等水平，但仍需关注那些表现出较高孤独倾向的学生。为他们提供个性化的辅导和支持，如一对一的心理咨询、社交技能训练等，帮助他们克服孤独感，融入集体生活。"
+            },
+            {
+                dimensionName: "自责倾向解释与建议",
+                percent: 40,
+                levelExplain: "本次评估结果显示，有40%-60%的学生在自责倾向方面处于中等水平。这意味着大多数学生在面对挫折或犯错时，能够有一定的自责意识，但自责程度相对适中，不会过度自责。这种情况表明学生具有一定的自我反思和自我约束能力，能够认识到自己的责任，但同时也意识到外部因素的影响。然而，若不加以引导和关注，部分学生可能会逐渐发展为高自责倾向，影响心理健康和个人发展。",
+                suggestion: "1.加强自我反思教育：引导学生进行积极的自我反思，帮助他们分析自己在事情中的责任和可以改进的地方，同时也要看到自己的努力和进步。通过自我反思，学生可以更好地认识自己，明确自己的发展方向，避免陷入过度自责的困境。\n2.开展情绪管理课程：教授学生情绪管理的方法和技巧，如情绪识别、情绪表达、情绪调节等。当学生在面对挫折或犯错时，能够有效管理自己的情绪，避免因情绪失控而产生过度自责。\n3.建立同伴支持小组：鼓励学生之间建立同伴支持小组，分享彼此的经历和感受，相互安慰和支持。同伴之间的理解和支持有助于学生缓解自责情绪，增强面对困难的勇气和信心。\n4.关注少数高自责倾向学生：虽然大部分学生的自责倾向处于中等水平，但仍需关注那些表现出较高自责倾向的学生。为他们提供个性化的辅导和支持，如一对一的心理咨询、情绪管理训练等，帮助他们克服自责倾向，促进心理健康和个人成长。"
+            },
+            {
+                dimensionName: "过敏倾向解释与建议",
+                percent: 47,
+                levelExplain: "本次评估结果显示，有40%-60%的学生在过敏倾向方面处于中等水平。这意味着大多数学生在面对外界刺激或变化时，会有一定程度的敏感反应，但这种反应相对适中，不会过度影响他们的日常生活和学习。这种情况可能源于学生对环境的适应能力、心理承受能力以及个性特点等因素的差异。虽然中等水平的过敏倾向在一定程度上是正常的，但若不加以引导和关注，也可能逐渐影响学生的心理健康和人际交往。",
+                suggestion: "1.提供情绪管理指导：为学生提供情绪管理的指导和建议，帮助他们学会在面对外界刺激时如何有效地管理自己的情绪。可以通过开展情绪管理工作坊、讲座等活动，教授学生情绪调节的方法和技巧。\n2.增强环境适应能力：鼓励学生积极参与各种活动和挑战，以增强他们对环境变化的适应能力。通过参与不同的活动，学生可以逐渐适应各种环境和情境，减少过敏反应。\n3.开展同伴互助活动：组织同伴互助活动，让学生在同伴之间分享自己的感受和经验，相互支持和鼓励。同伴之间的理解和帮助有助于学生缓解过敏情绪，增强面对外界刺激的信心和能力。\n4.关注少数高过敏倾向学生：虽然大部分学生的过敏倾向处于中等水平，但仍需关注那些表现出较高过敏倾向的学生。为他们提供个性化的辅导和支持，如心理咨询服务、情绪管理训练等，帮助他们克服过敏倾向，促进心理健康。"
+            },
+            {
+                dimensionName: "身体症状解释与建议",
+                percent: 85,
+                levelExplain: "在本次身体症状评估中，有70%及以上的学生表现出较低的身体症状。这表明大多数学生在身体健康方面状况良好，能够较好地应对学习和生活中的各种挑战，保持较为稳定的身体健康状态。这种情况为学生的学业发展和个人成长提供了良好的基础，也反映了学校在健康教育和环境营造方面的积极成效。然而，仍需关注那些表现出较多身体症状的学生，确保他们也能得到及时的支持和帮助。",
+                suggestion: "1.持续优化健康教育：虽然大部分学生的身体症状较少，但仍需持续开展健康教育，不断更新和完善健康教育内容，以适应学生身心发展的需求。同时，鼓励学生主动参与健康教育活动，提高他们的健康意识和自我保健能力。\n2.加强个体关注与支持：对于少数表现出较多身体症状的学生，给予个性化的关注和支持。了解他们的具体情况和需求，提供针对性的健康指导和心理辅导，帮助他们改善身体状况，提高生活质量。\n3.促进健康校园文化建设：进一步加强健康校园文化建设，营造一个积极向上、关注健康的校园氛围。通过开展健康主题的文化活动、健康知识竞赛等，激发学生对健康的关注和追求，促进全校师生的身心健康。\n4.鼓励学生自我监测与管理：引导学生学会自我监测身体健康状况，如定期测量体温、血压等，并进行自我管理。鼓励学生在发现身体不适时及时就医，并采取合理的调理措施，保持良好的身体健康状态。"
+            },
+            {
+                dimensionName: "恐怖倾向解释与建议",
+                percent: 93,
+                levelExplain: "在本次恐怖倾向评估中，有70%及以上的学生表现出较低的恐怖倾向。这表明大多数学生在面对特定情境或事物时，能够保持较为稳定和冷静的心态，不会产生过度的恐惧和焦虑反应。这种情况有利于学生的心理健康和适应能力，使他们能够更好地面对生活中的挑战和压力。然而，仍需关注那些表现出较高恐怖倾向的学生，确保他们也能得到有效的支持和帮助。",
+                suggestion: "1.继续营造积极向上的校园氛围：保持并进一步优化学校的校园文化，鼓励学生积极面对各种情境和事物，树立正确的价值观和人生观。通过积极的校园氛围，学生可以感受到来自周围环境的支持和鼓励，进一步降低恐怖倾向。\n2.培养学生的理性思维：在教育过程中，注重培养学生的理性思维能力，帮助他们学会客观分析和评估各种情境和事物，避免因非理性思维而产生不必要的恐惧。通过理性思维，学生可以更加冷静地面对恐惧情境，增强心理适应能力。\n3.关注少数恐怖倾向学生：虽然大部分学生的恐怖倾向较低，但仍需关注那些表现出恐怖倾向的学生。为他们提供个性化的辅导和支持，如安排同伴互助、组织小组活动等，帮助他们克服恐惧，增强适应能力和心理承受能力。\n4.加强心理健康教育：定期开展心理健康教育活动，普及心理健康知识，让学生了解恐怖倾向的相关信息，认识到适度的恐惧反应是正常的，但过度恐惧可能对心理健康产生不良影响。通过心理健康教育，学生可以更好地认识自己，提高自我调节能力。"
+            },
+            {
+                dimensionName: "冲动倾向解释与建议",
+                percent: 73,
+                levelExplain: "在本次冲动倾向评估中，有70%及以上的学生表现出较低的冲动倾向。这表明大多数学生在面对诱惑和情绪波动时，能够保持较为冷静和理智的状态，具有较强的自我控制能力和情绪调节能力。这种情况有利于学生的学业发展、人际关系维护以及个人成长，使他们能够更好地应对生活中的挑战和压力。然而，仍需关注那些表现出较高冲动倾向的学生，确保他们也能得到有效的支持和帮助。",
+                suggestion: "1.继续营造良好的校园环境：保持并进一步优化学校的校园环境和氛围，为学生提供一个有利于自我控制和理性决策的学习和生活环境。良好的校园环境有助于学生保持稳定的心态，减少冲动行为的发生。\n2.培养学生的同理心：开展同理心教育课程或活动，培养学生的同理心和理解他人的能力。让学生学会理解和关心那些表现出冲动倾向的同学，主动关心和帮助他们，营造一个充满关爱和支持的集体氛围。\n3.关注少数冲动倾向学生：虽然大部分学生的冲动倾向较低，但仍需关注那些表现出冲动倾向的学生。为他们提供个性化的辅导和支持，如安排同伴互助、组织小组活动等，帮助他们提高自我控制能力和情绪调节能力。\n4.加强心理健康教育：定期开展心理健康教育活动，普及心理健康知识，让学生了解冲动倾向的相关信息，认识到适度的冲动反应是正常的，但过度冲动可能对个人发展产生不良影响。通过心理健康教育，学生可以更好地认识自己，提高自我调节能力。"
+            },
+        ])
 
 
 
@@ -544,6 +643,9 @@ export default defineComponent({
             CHLDTableBoard,
             CHLDPieDataList,
             CHLDRadarBoard,
+            CMHTBoardList,
+            CPSFLevel,
+            CPSFPie,
         }
     },
 })
@@ -575,8 +677,8 @@ export default defineComponent({
                                 <a-option :value="0" label="社会情感测试">社会情感测试</a-option>
                                 <a-option :value="1" label="多元智能测试">多元智能测试</a-option>
                                 <a-option :value="2" label="生涯规划测试">生涯规划测试</a-option>
-                                <a-option :value="4" label="MHT测试">MHT测试</a-option>
-                                <a-option :value="3" label="心理动态测试">心理预警测试</a-option>
+                                <a-option :value="3" label="MHT测试">MHT测试</a-option>
+                                <a-option :value="4" label="心理动态测试">心理预警测试</a-option>
                             </a-select>
                             <a-select
                                 :style="{ width: '130px', height: '50px', borderRadius: '10px', background: 'radial-gradient(50.00% 50.00% at 50% 50%, rgb(77, 255, 223), rgb(77, 161, 255) 100%)', color: '#fff', fontSize: '18px', fontWeight: 'bold' }"
@@ -697,7 +799,44 @@ export default defineComponent({
                         </div>
                     </div>
                     <div class="visualContent collectiveContent" v-else>
-                        <div class="personSocialFeeling" v-if="currentType === 0"></div>
+                        <div class="personSocialFeeling" v-if="currentType === 0">
+                            <div class="firstLayer">
+                                <a-carousel :style="{
+                                    width: '100%',
+                                    height: '530px'
+                                }" :default-current="1" :auto-play="true">
+                                    <a-carousel-item v-for="item in 5">
+                                        <div class="everyLevelTile">{{ CPSFLevel.levelName }}描述</div>
+                                        <div class="everyLevel">
+                                            <div class="leftTop">
+                                                <level-stage :data="CPSFLevel" :boxWidth="750" :boxHeight="180" />
+                                                <dv-border-box1 style="width: 750px;height:240px;">
+                                                    <scroll-text :data="CPSFLevel.describe" :boxWidth="700"
+                                                        :boxHeight="180" board-title="整体情况描述" />
+                                                </dv-border-box1>
+                                            </div>
+                                            <div class="rightLevel">
+                                                <dv-border-box1 style="width: 1150px;height:530px;">
+                                                    <secondary-detail :data="CPSFLevel.secondLevel" :boxWidth="1100"
+                                                        :boxHeight="480" />
+                                                </dv-border-box1>
+                                            </div>
+                                        </div>
+
+
+                                    </a-carousel-item>
+                                </a-carousel>
+                            </div>
+                            <div class="secondLayer">
+                                <dv-border-box1 style="width: 1030px;height:330px;">
+                                    <horizontal-column :dataSource="PSFHorizontalColumn" :boxWidth="1000"
+                                        :boxHeight="280" board-title="总览统计" :currentType="currentType" />
+                                </dv-border-box1>
+                                <dv-border-box1 style="width: 850px;height:330px;">
+                                    <pie-board :data="CPSFPie" :boxWidth="800" :boxHeight="280" board-title="分布呈现" />
+                                </dv-border-box1>
+                            </div>
+                        </div>
                         <div class="mutipleIntelligence" v-else-if="currentType === 1">
                             <div class="leftLayer">
                                 <dv-border-box1 style="width: 900px;height:450px;">
@@ -711,8 +850,10 @@ export default defineComponent({
                             </div>
                             <div class="rightLayer">
                                 <dv-border-box1 style="width: 1000px;height:850px;">
-                                    <double-column :data-source="CMIDoubleColumn" :boxWidth="980" :boxHeight="800"
-                                        boardTitle="多元智能总览统计" />
+                                    <horizontal-column :dataSource="CMIDoubleColumn" :boxWidth="980" :boxHeight="800"
+                                        boardTitle="多元智能总览统计" :currentType="currentType" />
+                                    <!-- <double-column :data-source="CMIDoubleColumn" :boxWidth="980" :boxHeight="800"
+                                        boardTitle="多元智能总览统计" /> -->
                                 </dv-border-box1>
                             </div>
                         </div>
@@ -730,12 +871,16 @@ export default defineComponent({
                             <div class="rightLayer">
                                 <dv-border-box1 style="width: 1000px;height:850px;">
                                     <radar-board :data="CHLDRadarBoard" :boxWidth="980" :boxHeight="800"
-                                        board-title="霍兰德集体统计" :currentType="currentType" :radius="250"
-                                        :isDouble="true" />
+                                        board-title="霍兰德集体统计" :currentType="currentType" :radius="250" />
                                 </dv-border-box1>
                             </div>
                         </div>
-                        <div class="MHT" v-else-if="currentType === 3"></div>
+                        <div class="MHT" v-else-if="currentType === 3">
+                            <dv-border-box1 style="width: 450px;height:410px;" v-for="(item, index) in CMHTBoardList"
+                                :key="index">
+                                <collective-dimension-board :data="item" :boxHeight="340" :boxWidth="400" />
+                            </dv-border-box1>
+                        </div>
                     </div>
 
                     <div class="changePage">

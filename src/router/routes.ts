@@ -2,6 +2,7 @@ import ACCESS_ENUM from "@/access/accessEnum";
 // import UserLayout from "@/layouts/UserLayout.vue";
 import { RouteRecordRaw } from "vue-router";
 
+import StudentLayout from "@/layouts/StudentLayout.vue";
 import TeacherLayout from "@/layouts/TeacherLayout.vue";
 import CheckQuestionList from "@/views/CheckQuestionList.vue";
 import PsyDataBoardEnterVue from "@/views/psychologist/PsyDataBoardEnter.vue";
@@ -13,6 +14,7 @@ import StuReport from "@/views/student/StuReport.vue";
 import TeaDataBoardEnterVue from "@/views/teacher/TeaDataBoardEnter.vue";
 import TeaEvaluateManageVue from "@/views/teacher/TeaEvaluateManage.vue";
 import TeaReportViewVue from "@/views/teacher/TeaReportView.vue";
+// import UserLoginPage from "@/views/UserLoginPage.vue";
 import VisualReportVue from "@/views/VisualReport/VisualReport.vue";
 export const routes: Array<RouteRecordRaw> = [
   {
@@ -91,9 +93,13 @@ export const routes: Array<RouteRecordRaw> = [
   //     hideInMenu: true,
   //   },
   // },
-
   {
-    path: "/student/home",
+  path: "/student",
+    name: "心理学生端",
+    component: StudentLayout,
+    children: [
+       {
+    path: "/student",
     name: "心理学生端首页",
     component:StuHome
   },
@@ -107,6 +113,9 @@ export const routes: Array<RouteRecordRaw> = [
     name: "学生进行测评",
     component:StuAnswer
   },
+    ]
+},
+ 
   {
     path: "/teacher",
     name: "普通教师",

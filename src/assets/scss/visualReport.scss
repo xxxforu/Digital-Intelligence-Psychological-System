@@ -101,6 +101,47 @@
                     }
                 }
                 .collectiveContent {
+                    .personSocialFeeling {
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: space-between;
+                        align-items: center;
+                        .secondLayer {
+                            width: 100%;
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                        }
+                        .firstLayer {
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            .everyLevelTile {
+                                font-size: 25px;
+                                padding: 7px;
+                                margin-bottom: 10px;
+                                font-weight: 700;
+                                color: #fff;
+                                width: 980px;
+                                border-radius: 10px;
+                                background: linear-gradient(90.00deg, rgba(116, 194, 255, 0.4), rgba(0, 0, 0, 0.4) 100%);
+                            }
+                            .everyLevel {
+                                display: flex;
+                                justify-content: space-between;
+                                align-items: center;
+                                .leftTop {
+                                    display: flex;
+                                    flex-direction: column;
+                                    justify-content: space-between;
+                                    align-items: center;
+                                }
+                                .rightLevel {
+                                    transform: translateY(-50px);
+                                }
+                            }
+                        }
+                    }
                     .mutipleIntelligence {
                         display: flex;
                         justify-content: space-between;
@@ -134,6 +175,16 @@
                             /* 列间距自动计算 */
                             align-content: space-between;
                         }
+                    }
+                    .MHT {
+                        height: 850px;
+                        width: 1900px;
+                        display: grid;
+                        grid-template-columns: repeat(4, 1fr);
+                        /* 两行均分高度 */
+                        column-gap: auto;
+                        /* 列间距自动计算 */
+                        align-content: space-between;
                     }
                 }
             }
