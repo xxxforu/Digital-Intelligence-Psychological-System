@@ -1,4 +1,4 @@
-<template>
+<!-- <template>
   <div id="homePage">
     <div class="searchBar">
       <a-input-search
@@ -112,4 +112,4 @@ watchEffect(() => {
 .list-demo-action-layout .arco-list-item-action .arco-icon {
   margin: 0 4px;
 }
-</style>
+</style> -->

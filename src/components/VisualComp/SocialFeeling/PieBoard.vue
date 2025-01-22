@@ -1,7 +1,7 @@
 <template>
     <div class="PieBoard" :style="{ width: boxWidth + 'px', height: boxHeight + 'px' }">
         <div style="position:relative;height:100%;width:100%;">
-            <h3 class="boardTitle">{{ boardTitle }}</h3>
+            <h3 class="boardTitle" v-if="boardTitle">{{ boardTitle }}</h3>
             <div class="chart" ref="pieBoard" style="width:100%;height:100%;"></div>
         </div>
     </div>
@@ -25,13 +25,21 @@ echarts.use([
 
 export default defineComponent({
     props: {
-        boardTitle: String,
+        boardTitle: {
+            type: String,
+            required: false
+        },
         data: Array,
         boxWidth: Number,
         boxHeight: Number,
         radius: {
             type: Array,
             default: ['50%', '80%'],
+            required: false
+        },
+        label: {
+            type: Boolean,
+            default: true,
             required: false
         },
     },
@@ -122,7 +130,6 @@ export default defineComponent({
                     trigger: 'item',
                     textStyle: {
                         fontSize: 20,
-
                     }
                 },
                 legend: {
@@ -144,7 +151,7 @@ export default defineComponent({
                         radius: props.radius,
                         avoidLabelOverlap: false,
                         label: {
-                            show: true,
+                            show: props.label,
                             position: 'outside',
                             formatter: '{b}: {d}',
                             //{a}系列名，{b}数据名，{c}数据值，{d}百分比

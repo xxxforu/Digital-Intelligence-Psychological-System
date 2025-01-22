@@ -17,8 +17,9 @@ import {
     defineComponent,
     onMounted,
     onUnmounted,
-    ref
+    ref,
 } from 'vue';
+import { useRouter } from 'vue-router';
 export default defineComponent({
     components: {
         TableBoard,
@@ -33,27 +34,51 @@ export default defineComponent({
         LevelStage,
         SecondaryDetail,
         PieBoard,
+        useRouter,
     },
     computed: {
         title() {
             if (this.state.isPersonal) {
-                return '心理成长可视化大屏';
+                switch (this.currentType) {
+                    case 0:
+                        return '社会情感能力数据可视化大屏';
+                    case 1:
+                        return '多元智能数据可视化大屏';
+                    case 2:
+                        return '霍兰德职业兴趣数据可视化大屏';
+                    case 3:
+                        return '中小学生心理健康量表(MHT)数据可视化大屏';
+                    case 4:
+                        return '学生动态心理预警数据可视化大屏';
+                    default:
+                        return '';
+                }
             }
             switch (this.currentType) {
+                case 0:
+                    return '社会情感能力集体数据可视化大屏';
                 case 1:
-                    return '多元智能体数据可视化大屏';
+                    return '多元智能集体数据可视化大屏';
                 case 2:
-                    return '霍兰德集体数据大屏';
+                    return '霍兰德职业兴趣集体数据可视化大屏';
                 case 3:
-                    return 'MHT集体数据可视化数据';
+                    return '中小学生心理健康量表(MHT)集体数据可视化数据';
                 case 4:
-                    return '心理预警集体数据';
+                    return '学生动态心理预警集体数据可视化大屏';
                 default:
                     return '';
             }
         },
     },
+    // props: {
+    //     isPersonal: {
+    //         type: Boolean,
+    //         required: true,
+
+    //     }
+    // },
     setup() {
+        const router = useRouter()
         const borderRef = ref<InstanceType<typeof DvBorderBox1>>()
         //加载标识
         const loading = ref<boolean>(true)
@@ -84,7 +109,8 @@ export default defineComponent({
         var state = ref({
             term: "current",
             report: "latest",
-            isPersonal: false,
+            className: "701班小红",
+            isPersonal: true
         })
         var currentType = ref(0)
 
@@ -162,12 +188,12 @@ export default defineComponent({
             align: ['center']
         })
         const PSFHorizontalColumn = ref([
-            ['情绪能力', 88],
-            ['领导能力', 70],
-            ['关爱能力', 95],
-            ['任务能力', 92],
-            ['开放能力', 74],
-            ['学习能力', 55]
+            ['情绪能力', '88'],
+            ['领导能力', '70'],
+            ['关爱能力', '95'],
+            ['任务能力', '92'],
+            ['开放能力', '74'],
+            ['学习能力', '55']
         ])
         // mutipleIntelligence
         const MITableBoard = ref({
@@ -193,14 +219,14 @@ export default defineComponent({
             align: ['center']
         })
         const MIHorizontalColumn = ref([
-            ['语言言语智能', 5],
-            ['数据逻辑智能', 3],
-            ['视觉空间智能', 9],
-            ['音乐旋律智能', 7],
-            ['身体运动智能', 6],
-            ['人际关系智能', 8],
-            ['自我认知智能', 7],
-            ['自然观察智能', 8]
+            ['语言言语智能', '5'],
+            ['数据逻辑智能', '3'],
+            ['视觉空间智能', '9'],
+            ['音乐旋律智能', '7'],
+            ['身体运动智能', '6'],
+            ['人际关系智能', '8'],
+            ['自我认知智能', '7'],
+            ['自然观察智能', '8']
         ])
         const MIRadarBoard = ref({
             value: [5, 3, 9, 7, 6, 8, 7, 8],
@@ -215,43 +241,41 @@ export default defineComponent({
                 { text: '自然观察智能' },
             ],
         })
-        const MIScrollText1 = ref({
-            type: "核心智能详解",
-            dataList: [
-                {
-                    title: "语言言语智能",
-                    content: "该学生在言语-语言智能方面具有一定的优势。该学生对语言有一定的理解能力，能够处理日常的交流和基本的书面表达。该学生的语言学习能力适中，对新语言知识的掌握需要一定的时间和练习。在表达和沟通方面，该学生能够使用恰当的词汇和语法，尽管在复杂情境下可能需要进一步的练习和提高。该学生对语言的敏感性正在发展中，能够识别和使用一些修辞手法，但在创造性表达方面还有提升空间。通过持续的学习和实践，该学生有望提高自己的语言能力，更好地发掘和利用自己的言语-语言智能。"
-                },
-                {
-                    title: "数据逻辑智能",
-                    content: "该学生在逻辑-数学智能方面的表现处于平均水平。该学生在理解和应用数学概念及逻辑推理方面可能需要更多的努力和时间。在解决数学问题时，该学生可能在某些步骤上遇到困难，需要额外的指导和练习来提高解题技巧。在逻辑推理方面，该学生能够进行基本的思考，但在处理复杂的逻辑关系和抽象概念时可能会感到挑战。尽管如此，通过持续的学习和适当的指导，该学生完全有能力提高自己的逻辑-数学智能，增强解决问题和决策的能力。"
-                },
-                {
-                    title: "视觉空间智能",
-                    content: "该学生在视觉-空间智能方面展现出了非凡的才能和深刻的理解力。该学生对色彩、线条、形状、形式和空间关系的感知和理解能力非常强，这使得该学生在艺术、设计、建筑和导航等领域表现出色。该学生能够在心中轻松构建和操作复杂的空间图像，这种能力在解决空间问题和进行视觉创造时显得尤为突出。该学生在视觉艺术创作中展现出的创造力和表现力令人印象深刻，能够将抽象的视觉概念转化为具体的设计和作品。这种优势不仅体现在学术成绩上，也在日常决策和问题解决中发挥着重要作用。该学生对细节的注意力和空间想象力使该学生在需要空间想象力和视觉创造力的活动中能够迅速适应并表现出色。"
-                },
-                {
-                    title: "音乐旋律智能",
-                    content: "该学生在音乐-旋律智能方面展现出了非凡的才能和深刻的理解力。该学生对音乐的节奏、音调、旋律和音色有着极高的敏感性和理解力，这使得该学生在音乐创作、演奏和欣赏方面有着出色的才能。该学生能够准确地表达和传达音乐情感，对音乐的记忆力强，能够快速学习和掌握新的音乐作品。在音乐表演中，该学生能够展现出卓越的技巧和情感表达，无论是在独奏还是合奏中都能发挥关键作用。这种优势使该学生在音乐领域中能够迅速适应并表现出色，该学生对音乐的热爱和投入也常常激励着周围的人。该学生的音乐才能不仅在学术成绩上得到体现，也在日常生活中的音乐欣赏和创作中发挥着重要作用。"
-                },
-                {
-                    title: "身体运动智能",
-                    content: "该学生在身体-运动智能方面具有一定的优势，这使得该学生在体育和身体活动中比平均水平的学生更为出色。该学生对身体动作有一定的控制和协调能力，能够在体育和舞蹈等活动中表现出一定的技巧。虽然该学生可能不是每个运动领域的佼佼者，但该学生在某些特定的体育项目或活动中表现出了较高的潜力和兴趣。该学生可能在某些身体技巧上表现出色，如协调、平衡或力量，但在其他方面可能需要进一步的练习和提高。通过持续的锻炼和适当的指导，该学生有望提高自己的运动能力，更好地发掘和利用自己的潜力。"
-                },
-                {
-                    title: "人际关系智能",
-                    content: "该学生在人际关系智能方面表现出了卓越的能力和天赋。该学生对他人的情绪、意向、动机和感觉有着深刻的理解和洞察力，这使得该学生在与人交往时能够建立强有力的联系和信任。该学生能够准确地识别和解读他人的非言语信号，如面部表情、肢体语言和声音的微妙变化，这使该学生在社交场合中能够做出恰当的反应和调整。该学生的同理心和社交技巧使该学生成为团队中的协调者和领导者，能够有效地解决冲突和促进团队合作。这种优势不仅使该学生在个人关系中受到欢迎，也在需要团队合作和领导力的情境中发挥着重要作用。"
-                },
-                {
-                    title: "自我认知智能",
-                    content: "该学生在自我认识智能方面表现出了卓越的自我意识和深刻的自我理解。该学生对自己的长处和短处有着清晰的认识，能够准确地评估自己的能力和局限。这种自我认知使该学生能够在学习和生活中做出明智的决策，有效地规划自己的发展路径。该学生展现出高度的自我激励和自我调节能力，能够在面对挑战和压力时保持冷静和专注。该学生的自我反省能力使该学生能够从经验中学习，不断成长和进步。这种优势不仅帮助该学生在个人发展上取得成功，也使该学生在团队合作和领导力方面表现出色，因为该学生能够理解自己的行为如何影响他人。"
-                },
-                {
-                    title: "自我观察智能",
-                    content: "该学生在自然观察智能方面表现出了卓越的能力和深刻的理解。该学生对自然界的形态和模式有着敏锐的洞察力，能够准确地辨认和分类自然界中的各种生物和非生物元素。这种能力使该学生在户外活动、生态研究或环境科学等领域中表现出色。该学生对自然界的细微变化非常敏感，能够观察到其他人可能忽视的模式和联系。该学生的这种优势不仅体现在对自然世界的直接观察上，还体现在能够将这些观察与更广泛的环境问题和科学理论联系起来的能力。该学生对自然界的深刻理解和热爱，使该学生成为保护环境和促进可持续发展的积极倡导者。"
-                },
-            ]
-        })
+        const MIScrollText1 = ref([
+            {
+                title: "语言言语智能",
+                content: "该学生在言语-语言智能方面具有一定的优势。该学生对语言有一定的理解能力，能够处理日常的交流和基本的书面表达。该学生的语言学习能力适中，对新语言知识的掌握需要一定的时间和练习。在表达和沟通方面，该学生能够使用恰当的词汇和语法，尽管在复杂情境下可能需要进一步的练习和提高。该学生对语言的敏感性正在发展中，能够识别和使用一些修辞手法，但在创造性表达方面还有提升空间。通过持续的学习和实践，该学生有望提高自己的语言能力，更好地发掘和利用自己的言语-语言智能。"
+            },
+            {
+                title: "数据逻辑智能",
+                content: "该学生在逻辑-数学智能方面的表现处于平均水平。该学生在理解和应用数学概念及逻辑推理方面可能需要更多的努力和时间。在解决数学问题时，该学生可能在某些步骤上遇到困难，需要额外的指导和练习来提高解题技巧。在逻辑推理方面，该学生能够进行基本的思考，但在处理复杂的逻辑关系和抽象概念时可能会感到挑战。尽管如此，通过持续的学习和适当的指导，该学生完全有能力提高自己的逻辑-数学智能，增强解决问题和决策的能力。"
+            },
+            {
+                title: "视觉空间智能",
+                content: "该学生在视觉-空间智能方面展现出了非凡的才能和深刻的理解力。该学生对色彩、线条、形状、形式和空间关系的感知和理解能力非常强，这使得该学生在艺术、设计、建筑和导航等领域表现出色。该学生能够在心中轻松构建和操作复杂的空间图像，这种能力在解决空间问题和进行视觉创造时显得尤为突出。该学生在视觉艺术创作中展现出的创造力和表现力令人印象深刻，能够将抽象的视觉概念转化为具体的设计和作品。这种优势不仅体现在学术成绩上，也在日常决策和问题解决中发挥着重要作用。该学生对细节的注意力和空间想象力使该学生在需要空间想象力和视觉创造力的活动中能够迅速适应并表现出色。"
+            },
+            {
+                title: "音乐旋律智能",
+                content: "该学生在音乐-旋律智能方面展现出了非凡的才能和深刻的理解力。该学生对音乐的节奏、音调、旋律和音色有着极高的敏感性和理解力，这使得该学生在音乐创作、演奏和欣赏方面有着出色的才能。该学生能够准确地表达和传达音乐情感，对音乐的记忆力强，能够快速学习和掌握新的音乐作品。在音乐表演中，该学生能够展现出卓越的技巧和情感表达，无论是在独奏还是合奏中都能发挥关键作用。这种优势使该学生在音乐领域中能够迅速适应并表现出色，该学生对音乐的热爱和投入也常常激励着周围的人。该学生的音乐才能不仅在学术成绩上得到体现，也在日常生活中的音乐欣赏和创作中发挥着重要作用。"
+            },
+            {
+                title: "身体运动智能",
+                content: "该学生在身体-运动智能方面具有一定的优势，这使得该学生在体育和身体活动中比平均水平的学生更为出色。该学生对身体动作有一定的控制和协调能力，能够在体育和舞蹈等活动中表现出一定的技巧。虽然该学生可能不是每个运动领域的佼佼者，但该学生在某些特定的体育项目或活动中表现出了较高的潜力和兴趣。该学生可能在某些身体技巧上表现出色，如协调、平衡或力量，但在其他方面可能需要进一步的练习和提高。通过持续的锻炼和适当的指导，该学生有望提高自己的运动能力，更好地发掘和利用自己的潜力。"
+            },
+            {
+                title: "人际关系智能",
+                content: "该学生在人际关系智能方面表现出了卓越的能力和天赋。该学生对他人的情绪、意向、动机和感觉有着深刻的理解和洞察力，这使得该学生在与人交往时能够建立强有力的联系和信任。该学生能够准确地识别和解读他人的非言语信号，如面部表情、肢体语言和声音的微妙变化，这使该学生在社交场合中能够做出恰当的反应和调整。该学生的同理心和社交技巧使该学生成为团队中的协调者和领导者，能够有效地解决冲突和促进团队合作。这种优势不仅使该学生在个人关系中受到欢迎，也在需要团队合作和领导力的情境中发挥着重要作用。"
+            },
+            {
+                title: "自我认知智能",
+                content: "该学生在自我认识智能方面表现出了卓越的自我意识和深刻的自我理解。该学生对自己的长处和短处有着清晰的认识，能够准确地评估自己的能力和局限。这种自我认知使该学生能够在学习和生活中做出明智的决策，有效地规划自己的发展路径。该学生展现出高度的自我激励和自我调节能力，能够在面对挑战和压力时保持冷静和专注。该学生的自我反省能力使该学生能够从经验中学习，不断成长和进步。这种优势不仅帮助该学生在个人发展上取得成功，也使该学生在团队合作和领导力方面表现出色，因为该学生能够理解自己的行为如何影响他人。"
+            },
+            {
+                title: "自我观察智能",
+                content: "该学生在自然观察智能方面表现出了卓越的能力和深刻的理解。该学生对自然界的形态和模式有着敏锐的洞察力，能够准确地辨认和分类自然界中的各种生物和非生物元素。这种能力使该学生在户外活动、生态研究或环境科学等领域中表现出色。该学生对自然界的细微变化非常敏感，能够观察到其他人可能忽视的模式和联系。该学生的这种优势不仅体现在对自然世界的直接观察上，还体现在能够将这些观察与更广泛的环境问题和科学理论联系起来的能力。该学生对自然界的深刻理解和热爱，使该学生成为保护环境和促进可持续发展的积极倡导者。"
+            },
+        ]
+        )
         const MIScrollText2 = ref([
             {
                 title: "0503 新闻传播学类",
@@ -433,6 +457,99 @@ export default defineComponent({
             },
 
         ])
+        //earlyWarnig
+        const EWTableBoard1 = ref({
+            header: ['维度名称', '类型', '严重程度'],
+            data: [
+                ['家庭亲密度低', '阳性', "80%"],
+                ['家庭冲突', '阳性', "70%"],
+                ['家长情绪不稳定', '阴性', "25%"],
+                ['社会支持不足', '阴性', "18%"],
+                ['师生关系差', '阴性', "15%"],
+            ],
+            rowNum: 5, //表格行数
+            headerBGC: 'linear-gradient(rgba(116, 194, 255, 0.4), rgba(7, 125, 255, 0.4))',
+            oddRowBGC: '#0f1325', //奇数行
+            evenRowBGC: '#171c33', //偶数行
+            index: true,
+            align: ['center']
+        })
+        const EWRadarBoard1 = ref({
+            value: [0.8, 0.7, 0.25, 0.18, 0.15],
+            indicator: [
+                { text: '家庭亲密度低', max: 1 },
+                { text: '家庭冲突', max: 1 },
+                { text: '家长情绪不稳定', max: 1 },
+                { text: '社会支持不足', max: 1 },
+                { text: '师生关系差', max: 1 },
+            ],
+        })
+        const EWTableBoard2 = ref({
+            header: ['维度名称', '类型', '严重程度'],
+            data: [
+                ['抑郁', '阳性', "80%"],
+                ['焦虑', '阳性', "70%"],
+                ['无助与无力感', '阳性', "66%"],
+                ['情绪失控', '阴性', "18%"],
+                ['挫败与气馁', '阴性', "15%"],
+            ],
+            rowNum: 5, //表格行数
+            headerBGC: 'linear-gradient(rgba(116, 194, 255, 0.4), rgba(7, 125, 255, 0.4))',
+            oddRowBGC: '#0f1325', //奇数行
+            evenRowBGC: '#171c33', //偶数行
+            index: true,
+            align: ['center']
+        })
+        const EWRadarBoard2 = ref({
+            value: [2, 4, 2, 1, 3],
+            indicator: [
+                { text: '抑郁', max: 3 },
+                { text: '焦虑', max: 4 },
+                { text: '无助与无力感', max: 5 },
+                { text: '情绪失控', max: 2 },
+                { text: '挫败与气馁', max: 4 },
+            ],
+        })
+        const EWTableBoard3 = ref({
+            header: ['维度名称', '类型', '严重程度'],
+            data: [
+                ['自杀程度', '阴性', "15%"],
+            ],
+            rowNum: 1, //表格行数
+            headerBGC: 'linear-gradient(rgba(116, 194, 255, 0.4), rgba(7, 125, 255, 0.4))',
+            oddRowBGC: '#0f1325', //奇数行
+            evenRowBGC: '#171c33', //偶数行
+            index: true,
+            align: ['center']
+        })
+        const EWTableBoard4 = ref({
+            header: ['维度名称', '类型', '严重程度'],
+            data: [
+                ['社会决定完美主义', '阳性', "80%"],
+                ['状态性冲动', '阳性', "70%"],
+                ['攻击敌对', '阳性', "66%"],
+                ['问题解决困境', '阴性', "18%"],
+                ['反刍思维', '阴性', "15%"],
+                ['低自尊与自卑', '阴性', "12%"],
+            ],
+            rowNum: 6, //表格行数
+            headerBGC: 'linear-gradient(rgba(116, 194, 255, 0.4), rgba(7, 125, 255, 0.4))',
+            oddRowBGC: '#0f1325', //奇数行
+            evenRowBGC: '#171c33', //偶数行
+            index: true,
+            align: ['center']
+        })
+        const EWRadarBoard4 = ref({
+            value: [0.8, 0.7, 0.66, 0.18, 0.15, 0.12],
+            indicator: [
+                { text: '社会决定完美主义', max: 1 },
+                { text: '状态性冲动', max: 1 },
+                { text: '攻击敌对', max: 1 },
+                { text: '问题解决困境', max: 1 },
+                { text: '反刍思维', max: 1 },
+                { text: '低自尊与自卑', max: 1 },
+            ],
+        })
 
         // 集体C
         //personSocialFeeling
@@ -498,14 +615,14 @@ export default defineComponent({
             align: ['center']
         })
         const CMIPieDataList = ref([
-            ['语言言语智能', 32, 16, 67],
-            ['数据逻辑智能', 29, 19, 60],
-            ['视觉空间智能', 27, 21, 56],
-            ['音乐旋律智能', 25, 23, 52],
-            ['身体运动智能', 24, 22, 50],
-            ['人际关系智能', 23, 24, 48],
-            ['自我认知智能', 22, 25, 44],
-            ['自然观察智能', 21, 26, 42]
+            ['语言言语智能', 32, 67],
+            ['数据逻辑智能', 29, 60],
+            ['视觉空间智能', 27, 56],
+            ['音乐旋律智能', 25, 52],
+            ['身体运动智能', 24, 50],
+            ['人际关系智能', 23, 48],
+            ['自我认知智能', 22, 44],
+            ['自然观察智能', 21, 42]
         ])
         const CMIDoubleColumn = ref([
             //['智能维度', '有优势', '其他'],
@@ -537,12 +654,12 @@ export default defineComponent({
             align: ['center']
         })
         const CHLDPieDataList = ref([
-            ['R-Realistic-技能型', 32, 16, 67],
-            ['I-Investigative-研究型', 29, 19, 60],
-            ['A-Artistic-艺术型', 27, 21, 56],
-            ['S-Social-社会型', 25, 23, 52],
-            ['E-Enterprise-经营型', 24, 22, 50],
-            ['C-Conventional-常规型', 23, 24, 48],
+            ['R-Realistic-技能型', 32, 67],
+            ['I-Investigative-研究型', 29, 60],
+            ['A-Artistic-艺术型', 27, 56],
+            ['S-Social-社会型', 25, 52],
+            ['E-Enterprise-经营型', 24, 50],
+            ['C-Conventional-常规型', 23, 48],
         ])
         const CHLDRadarBoard = ref({
             value: [8, 7, 9, 6, 3, 6],
@@ -606,9 +723,90 @@ export default defineComponent({
                 suggestion: "1.继续营造良好的校园环境：保持并进一步优化学校的校园环境和氛围，为学生提供一个有利于自我控制和理性决策的学习和生活环境。良好的校园环境有助于学生保持稳定的心态，减少冲动行为的发生。\n2.培养学生的同理心：开展同理心教育课程或活动，培养学生的同理心和理解他人的能力。让学生学会理解和关心那些表现出冲动倾向的同学，主动关心和帮助他们，营造一个充满关爱和支持的集体氛围。\n3.关注少数冲动倾向学生：虽然大部分学生的冲动倾向较低，但仍需关注那些表现出冲动倾向的学生。为他们提供个性化的辅导和支持，如安排同伴互助、组织小组活动等，帮助他们提高自我控制能力和情绪调节能力。\n4.加强心理健康教育：定期开展心理健康教育活动，普及心理健康知识，让学生了解冲动倾向的相关信息，认识到适度的冲动反应是正常的，但过度冲动可能对个人发展产生不良影响。通过心理健康教育，学生可以更好地认识自己，提高自我调节能力。"
             },
         ])
-
-
-
+        //earlyWarnig
+        const CEWTableBoard1 = ref({
+            header: ['维度名称', '类型', '人数占比'],
+            data: [
+                ['家庭亲密度低', '阳性', "80%"],
+                ['家庭冲突', '阳性', "70%"],
+                ['家长情绪不稳定', '阴性', "25%"],
+                ['社会支持不足', '阴性', "18%"],
+                ['师生关系差', '阴性', "15%"],
+            ],
+            rowNum: 5, //表格行数
+            headerBGC: 'linear-gradient(rgba(116, 194, 255, 0.4), rgba(7, 125, 255, 0.4))',
+            oddRowBGC: '#0f1325', //奇数行
+            evenRowBGC: '#171c33', //偶数行
+            index: true,
+            align: ['center']
+        })
+        const CEWPie1 = ref([
+            { value: 0.8, name: '家庭亲密度低' },
+            { value: 0.7, name: '家庭冲突' },
+            { value: 0.25, name: '家长情绪不稳定' },
+            { value: 0.18, name: '社会支持不足' },
+            { value: 0.15, name: '师生关系差' },
+        ])
+        const CEWTableBoard2 = ref({
+            header: ['维度名称', '类型', '人数占比'],
+            data: [
+                ['抑郁', '阳性', "80%"],
+                ['焦虑', '阳性', "70%"],
+                ['无助与无力感', '阳性', "66%"],
+                ['情绪失控', '阴性', "18%"],
+                ['挫败与气馁', '阴性', "15%"],
+            ],
+            rowNum: 5, //表格行数
+            headerBGC: 'linear-gradient(rgba(116, 194, 255, 0.4), rgba(7, 125, 255, 0.4))',
+            oddRowBGC: '#0f1325', //奇数行
+            evenRowBGC: '#171c33', //偶数行
+            index: true,
+            align: ['center']
+        })
+        const CEWPie2 = ref([
+            { value: 0.8, name: '抑郁' },
+            { value: 0.7, name: '焦虑' },
+            { value: 0.66, name: '无助与无力感' },
+            { value: 0.18, name: '情绪失控' },
+            { value: 0.15, name: '挫败与气馁' },
+        ])
+        const CEWTableBoard3 = ref({
+            header: ['维度名称', '类型', '人数占比'],
+            data: [
+                ['自杀程度', '阴性', "15%"],
+            ],
+            rowNum: 1, //表格行数
+            headerBGC: 'linear-gradient(rgba(116, 194, 255, 0.4), rgba(7, 125, 255, 0.4))',
+            oddRowBGC: '#0f1325', //奇数行
+            evenRowBGC: '#171c33', //偶数行
+            index: true,
+            align: ['center']
+        })
+        const CEWTableBoard4 = ref({
+            header: ['维度名称', '类型', '人数占比'],
+            data: [
+                ['社会决定完美主义', '阳性', "80%"],
+                ['状态性冲动', '阳性', "70%"],
+                ['攻击敌对', '阳性', "66%"],
+                ['问题解决困境', '阴性', "18%"],
+                ['反刍思维', '阴性', "15%"],
+                ['低自尊与自卑', '阴性', "12%"],
+            ],
+            rowNum: 6, //表格行数
+            headerBGC: 'linear-gradient(rgba(116, 194, 255, 0.4), rgba(7, 125, 255, 0.4))',
+            oddRowBGC: '#0f1325', //奇数行
+            evenRowBGC: '#171c33', //偶数行
+            index: true,
+            align: ['center']
+        })
+        const CEWPie4 = ref([
+            { value: 0.8, name: '社会决定完美主义' },
+            { value: 0.7, name: '状态性冲动' },
+            { value: 0.66, name: '攻击敌对' },
+            { value: 0.18, name: '问题解决困境' },
+            { value: 0.15, name: '反刍思维' },
+            { value: 0.12, name: '低自尊与自卑' },
+        ])
 
 
         return {
@@ -617,6 +815,7 @@ export default defineComponent({
             currentType,
             state,
             testSelectChange,
+            router,
 
             PSFScrollText1,
             PSFScrollText2,
@@ -646,6 +845,20 @@ export default defineComponent({
             CMHTBoardList,
             CPSFLevel,
             CPSFPie,
+            EWTableBoard1,
+            EWRadarBoard1,
+            EWTableBoard2,
+            EWRadarBoard2,
+            EWTableBoard3,
+            EWTableBoard4,
+            EWRadarBoard4,
+            CEWTableBoard1,
+            CEWPie1,
+            CEWTableBoard2,
+            CEWPie2,
+            CEWTableBoard3,
+            CEWTableBoard4,
+            CEWPie4,
         }
     },
 })
@@ -659,26 +872,30 @@ export default defineComponent({
                 <div v-else class="host-body">
                     <div class="vr-title">
                         <img src="../../assets/visualReport/titleBG.png" alt="lost">
-                        <span id="title">{{ title }}</span>
+                        <span id="title" @click="state.isPersonal = !state.isPersonal">{{ title }}</span>
                         <div class="left">
-                            <img src="../../assets/visualReport/return.png" alt="return" class="return">
+                            <img src="../../assets/visualReport/return.png" alt="return" class="return"
+                                style="cursor: pointer;" @click="router.go(-1)">
+                            <div class="className">
+                                {{ state.className }}
+                            </div>
                         </div>
                         <div class="right">
                             <a-select
-                                :style="{ width: '130px', height: '50px', borderRadius: '10px', background: 'radial-gradient(50.00% 50.00% at 50% 50%, rgb(77, 255, 223), rgb(77, 161, 255) 100%)', color: '#fff', fontSize: '18px', fontWeight: 'bold' }"
+                                :style="{ width: '160px', height: '50px', borderRadius: '10px', background: 'radial-gradient(50.00% 50.00% at 50% 50%, rgb(77, 255, 223), rgb(77, 161, 255) 100%)', color: '#fff', fontSize: '18px', fontWeight: 'bold' }"
                                 v-model="state.term">
-                                <a-option value="current">当前学期</a-option>
-                                <a-option value="first">上学期</a-option>
-                                <a-option value="second">下学期</a-option>
+                                <a-option value="current">2024-2025-1</a-option>
+                                <a-option value="first">2024-2025-2</a-option>
+                                <a-option value="second">2023-2024-1</a-option>
                             </a-select>
                             <a-select
-                                :style="{ width: '180px', height: '50px', borderRadius: '10px', background: 'radial-gradient(50.00% 50.00% at 50% 50%, rgb(77, 255, 223), rgb(77, 161, 255) 100%)', color: '#fff', fontSize: '18px', fontWeight: 'bold' }"
+                                :style="{ width: '260px', height: '50px', borderRadius: '10px', background: 'radial-gradient(50.00% 50.00% at 50% 50%, rgb(77, 255, 223), rgb(77, 161, 255) 100%)', color: '#fff', fontSize: '18px', fontWeight: 'bold' }"
                                 v-model="currentType" @change="testSelectChange">
-                                <a-option :value="0" label="社会情感测试">社会情感测试</a-option>
-                                <a-option :value="1" label="多元智能测试">多元智能测试</a-option>
-                                <a-option :value="2" label="生涯规划测试">生涯规划测试</a-option>
-                                <a-option :value="3" label="MHT测试">MHT测试</a-option>
-                                <a-option :value="4" label="心理动态测试">心理预警测试</a-option>
+                                <a-option :value="0" label="社会情感能力数据可视化大屏">社会情感能力数据可视化大屏</a-option>
+                                <a-option :value="1" label="多元智能数据可视化大屏">多元智能数据可视化大屏</a-option>
+                                <a-option :value="2" label="霍兰德职业兴趣数据可视化大屏">霍兰德职业兴趣数据可视化大屏</a-option>
+                                <a-option :value="3" label="中小学生心理健康量表(MHT)数据可视化大屏">中小学生心理健康量表(MHT)数据可视化大屏</a-option>
+                                <a-option :value="4" label="学生动态心理预警数据可视化大屏">学生动态心理预警数据可视化大屏</a-option>
                             </a-select>
                             <a-select
                                 :style="{ width: '130px', height: '50px', borderRadius: '10px', background: 'radial-gradient(50.00% 50.00% at 50% 50%, rgb(77, 255, 223), rgb(77, 161, 255) 100%)', color: '#fff', fontSize: '18px', fontWeight: 'bold' }"
@@ -687,6 +904,7 @@ export default defineComponent({
                                 <a-option value="first">第一次报告</a-option>
                                 <a-option value="second">第二次报告</a-option>
                             </a-select>
+
                         </div>
                     </div>
                     <div class="visualContent personalContent" v-if="state.isPersonal">
@@ -740,8 +958,8 @@ export default defineComponent({
                             </div>
                             <div class="secondLayer">
                                 <dv-border-box1 style="width: 950px;height:450px;">
-                                    <scroll-text :data="MIScrollText1.dataList" :boxWidth="900" :boxHeight="380"
-                                        :board-title="MIScrollText1.type + '详解'" />
+                                    <scroll-text :data="MIScrollText1" :boxWidth="900" :boxHeight="380"
+                                        board-title="核心智能详解" />
                                 </dv-border-box1>
                                 <dv-border-box1 style="width: 950px;height:450px;">
                                     <scroll-text :data="MIScrollText2" :boxWidth="900" :boxHeight="380"
@@ -797,6 +1015,40 @@ export default defineComponent({
                                 </dv-border-box1>
                             </div>
                         </div>
+                        <div class="earlyWarnig" v-else-if="currentType === 4">
+                            <div class="left">
+                                <div class="leftTop">
+                                    <dv-border-box1 style="width: 530px;height:650px;">
+                                        <table-board :config="EWTableBoard1" :boxWidth="480" :boxHeight="300"
+                                            board-title="易损处境维度分析" :isEarlyWarning="true" />
+                                        <radar-board :currentType="currentType" :data="EWRadarBoard1" :boxWidth="480"
+                                            :boxHeight="350" />
+                                    </dv-border-box1>
+                                    <dv-border-box1 style="width: 530px;height:650px;">
+                                        <table-board :config="EWTableBoard2" :boxWidth="480" :boxHeight="300"
+                                            board-title="心理痛苦维度分析" :isEarlyWarning="true" />
+                                        <radar-board :currentType="currentType" :data="EWRadarBoard2" :boxWidth="480"
+                                            :boxHeight="350" />
+                                    </dv-border-box1>
+                                </div>
+                                <div class="leftBottom">
+                                    <dv-border-box1 style="width: 1060px;height:200px;">
+                                        <table-board :config="EWTableBoard3" :boxWidth="400" :boxHeight="150"
+                                            board-title="自杀意念程度" :isEarlyWarning="true" />
+                                        <PipeBoard :currentType="currentType" :percent="15" :boxWidth="480"
+                                            :boxHeight="100" />
+                                    </dv-border-box1>
+                                </div>
+                            </div>
+                            <div class="right">
+                                <dv-border-box1 style="width: 830px;height:850px;">
+                                    <table-board :config="EWTableBoard4" :boxWidth="780" :boxHeight="420"
+                                        board-title="易损特质维度分析" :isEarlyWarning="true" />
+                                    <radar-board :currentType="currentType" :data="EWRadarBoard4" :boxWidth="780"
+                                        :boxHeight="380" />
+                                </dv-border-box1>
+                            </div>
+                        </div>
                     </div>
                     <div class="visualContent collectiveContent" v-else>
                         <div class="personSocialFeeling" v-if="currentType === 0">
@@ -845,15 +1097,13 @@ export default defineComponent({
                                 </dv-border-box1>
                                 <div class="pipeBox">
                                     <PipeBoard v-for="(item, index) in CMIPieDataList" :key="index" :data="item"
-                                        :boxWidth="200" :boxHeight="150" />
+                                        :boxWidth="200" :boxHeight="150" :currenType="currentType" />
                                 </div>
                             </div>
                             <div class="rightLayer">
                                 <dv-border-box1 style="width: 1000px;height:850px;">
                                     <horizontal-column :dataSource="CMIDoubleColumn" :boxWidth="980" :boxHeight="800"
                                         boardTitle="多元智能总览统计" :currentType="currentType" />
-                                    <!-- <double-column :data-source="CMIDoubleColumn" :boxWidth="980" :boxHeight="800"
-                                        boardTitle="多元智能总览统计" /> -->
                                 </dv-border-box1>
                             </div>
                         </div>
@@ -865,7 +1115,7 @@ export default defineComponent({
                                 </dv-border-box1>
                                 <div class="pipeBox">
                                     <PipeBoard v-for="(item, index) in CHLDPieDataList" :key="index" :data="item"
-                                        :boxWidth="250" :boxHeight="150" :isHollander="true" />
+                                        :boxWidth="250" :boxHeight="150" :currenType="currentType" />
                                 </div>
                             </div>
                             <div class="rightLayer">
@@ -881,13 +1131,49 @@ export default defineComponent({
                                 <collective-dimension-board :data="item" :boxHeight="340" :boxWidth="400" />
                             </dv-border-box1>
                         </div>
+                        <div class="earlyWarnig" v-else-if="currentType === 4">
+                            <div class="left">
+                                <div class="leftTop">
+                                    <dv-border-box1 style="width: 530px;height:650px;">
+                                        <table-board :config="CEWTableBoard1" :boxWidth="480" :boxHeight="300"
+                                            board-title="易损处境维度分析" :isEarlyWarning="true" />
+                                        <pie-board :data="CEWPie1" :boxWidth="480" :boxHeight="350"
+                                            :radius="['30%', '50%']" :label="false" />
+                                    </dv-border-box1>
+                                    <dv-border-box1 style="width: 530px;height:650px;">
+                                        <table-board :config="CEWTableBoard2" :boxWidth="480" :boxHeight="300"
+                                            board-title="心理痛苦维度分析" :isEarlyWarning="true" />
+                                        <pie-board :data="CEWPie2" :boxWidth="480" :boxHeight="350"
+                                            :radius="['30%', '50%']" :label="false" />
+
+                                    </dv-border-box1>
+                                </div>
+                                <div class="leftBottom">
+                                    <dv-border-box1 style="width: 1060px;height:200px;">
+                                        <table-board :config="CEWTableBoard3" :boxWidth="400" :boxHeight="150"
+                                            board-title="自杀意念程度" :isEarlyWarning="true" />
+                                        <PipeBoard :currentType="currentType" :percent="15" :boxWidth="480"
+                                            :boxHeight="100" />
+                                    </dv-border-box1>
+                                </div>
+                            </div>
+                            <div class="right">
+                                <dv-border-box1 style="width: 830px;height:850px;">
+                                    <table-board :config="CEWTableBoard1" :boxWidth="780" :boxHeight="420"
+                                        board-title="易损特质维度分析" :isEarlyWarning="true" />
+                                    <pie-board :data="CEWPie4" :boxWidth="780" :boxHeight="380" :radius="['30%', '50%']"
+                                        :label="false" />
+
+                                </dv-border-box1>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="changePage">
-                        <button class="lastPage changePageButton" @click="goToLastPage"
-                            :disabled="currentType === 0">上一页</button>
-                        <button class="nextPage changePageButton" @click="goToNextPage"
-                            :disabled="currentType === 4">下一页</button>
+                        <button class="lastPage changePageButton" @click="goToLastPage" :disabled="currentType === 0"
+                            :class="{ disable: currentType === 0 }">上一页</button>
+                        <button class="nextPage changePageButton" @click="goToNextPage" :disabled="currentType === 4"
+                            :class="{ disable: currentType === 4 }">下一页</button>
                     </div>
 
 

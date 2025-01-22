@@ -139,7 +139,7 @@ export default defineComponent({
     display: flex;
     flex-direction: column;
     //滚动速度
-    animation: scroll 35s linear infinite;
+    animation: scroll 40s linear infinite;
 }
 
 .scroll-item {

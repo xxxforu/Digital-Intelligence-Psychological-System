@@ -3,9 +3,11 @@
 </template>
 
 <script lang='ts'>
+import { useTestInformStore } from '@/store/testStore';
 export default ({
     setup() {
-        components: { }
+        const testInformStore = useTestInformStore()
+        const testInform = testInformStore.testInform
         return {}
     }
 })

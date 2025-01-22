@@ -1,7 +1,7 @@
 <template>
     <div class="radarBoard" :style="{ width: boxWidth + 'px', height: boxHeight + 'px' }">
         <div style="position:relative;height:100%;width:100%;">
-            <h3 class="boardTitle">{{ boardTitle }}</h3>
+            <h3 class="boardTitle" v-if="boardTitle">{{ boardTitle }}</h3>
             <div class="chart" ref="radarBoard" style="width:100%;height:100%;"></div>
         </div>
     </div>
@@ -19,7 +19,10 @@ import { defineComponent, onMounted, ref } from 'vue';
 export default defineComponent({
     props: {
         currentType: Number,
-        boardTitle: String,
+        boardTitle: {
+            type: String,
+            required: false
+        },
         data: Object,
         boxWidth: Number,
         boxHeight: Number,
@@ -56,9 +59,14 @@ export default defineComponent({
                 offset: 0, color: 'rgba(227,35,255,0.6)'
             }, {
                 offset: 1, color: 'rgba(117,23,248,0.6)'
+            }],
+            [{
+                offset: 0, color: 'rgba(255,212,34,0.5)'
+            }, {
+                offset: 1, color: 'rgba(117,23,248,0.5)'
             }]
         ]
-        const color = ['rgba(77,253,224,0.6)', 'rgba(125,64,255,0.6)', 'rgba(255,212,34,0.6)', 'rgba(227,35,255,0.6)']
+        const color = ['rgba(77,253,224,0.6)', 'rgba(125,64,255,0.6)', 'rgba(77,161,255,0.6)', 'rgba(227,35,255,0.6)', 'rgba(255,212,34,0.6)']
         onMounted(() => {
             const radarBoardChart = echarts.init(radarBoard.value)
             var option;

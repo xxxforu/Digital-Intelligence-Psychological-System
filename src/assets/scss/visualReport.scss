@@ -29,7 +29,7 @@
                     }
                     #title {
                         color: white;
-                        font-size: 45px;
+                        font-size: 32px;
                         font-weight: bold;
                         position: absolute;
                         left: 50%;
@@ -41,9 +41,26 @@
                         position: absolute;
                         left: 0;
                         top: 30px;
+                        display: flex;
+                        align-items: center;
                         .return {
                             width: 30px;
                             height: 30px;
+                            margin-right: 10px;
+                        }
+                        .className {
+                            width: 130px;
+                            height: 50px;
+                            font-size: 18px;
+                            font-weight: 700;
+                            color: #fff;
+                            box-sizing: border-box;
+                            border-radius: 5px;
+                            text-align: center;
+                            line-height: 43px;
+                            box-sizing: border-box;
+                            border: 3px solid black;
+                            border-image: linear-gradient(to bottom right, rgb(77, 161, 255), rgb(77, 255, 223)) 10;
                         }
                     }
                     .right {
@@ -98,6 +115,50 @@
                         border-radius: 5px;
                         padding: 0;
                         background: radial-gradient(50.00% 50.00% at 50% 50%, rgb(77, 255, 223), rgb(77, 161, 255) 100%);
+                    }
+                    .disable {
+                        background: rgba(190, 204, 255, 0.25) !important;
+                    }
+                }
+                .personalContent {
+                    .earlyWarnig {
+                        display: flex;
+                        width: 100%;
+                        justify-content: space-between;
+                        .left {
+                            display: flex;
+                            flex-direction: column;
+                            .leftTop {
+                                display: flex;
+                                 ::v-deep .dv-border-box-1 {
+                                    .border-box-content {
+                                        display: flex;
+                                        flex-direction: column;
+                                        justify-content: center;
+                                        align-items: center;
+                                    }
+                                }
+                            }
+                            .leftBottom {
+                                 ::v-deep .dv-border-box-1 {
+                                    .border-box-content {
+                                        display: flex;
+                                        justify-content: space-between;
+                                        align-items: center;
+                                    }
+                                }
+                            }
+                        }
+                        .right {
+                             ::v-deep .dv-border-box-1 {
+                                .border-box-content {
+                                    display: flex;
+                                    flex-direction: column;
+                                    justify-content: space-between;
+                                    align-items: center;
+                                }
+                            }
+                        }
                     }
                 }
                 .collectiveContent {
@@ -185,6 +246,45 @@
                         column-gap: auto;
                         /* 列间距自动计算 */
                         align-content: space-between;
+                    }
+                    .earlyWarnig {
+                        display: flex;
+                        width: 100%;
+                        justify-content: space-between;
+                        .left {
+                            display: flex;
+                            flex-direction: column;
+                            .leftTop {
+                                display: flex;
+                                 ::v-deep .dv-border-box-1 {
+                                    .border-box-content {
+                                        display: flex;
+                                        flex-direction: column;
+                                        justify-content: center;
+                                        align-items: center;
+                                    }
+                                }
+                            }
+                            .leftBottom {
+                                 ::v-deep .dv-border-box-1 {
+                                    .border-box-content {
+                                        display: flex;
+                                        justify-content: space-between;
+                                        align-items: center;
+                                    }
+                                }
+                            }
+                        }
+                        .right {
+                             ::v-deep .dv-border-box-1 {
+                                .border-box-content {
+                                    display: flex;
+                                    flex-direction: column;
+                                    justify-content: space-between;
+                                    align-items: center;
+                                }
+                            }
+                        }
                     }
                 }
             }

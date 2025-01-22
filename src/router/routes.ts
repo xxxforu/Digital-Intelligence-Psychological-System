@@ -14,19 +14,22 @@ import StuReport from "@/views/student/StuReport.vue";
 import TeaDataBoardEnterVue from "@/views/teacher/TeaDataBoardEnter.vue";
 import TeaEvaluateManageVue from "@/views/teacher/TeaEvaluateManage.vue";
 import TeaReportViewVue from "@/views/teacher/TeaReportView.vue";
-// import UserLoginPage from "@/views/UserLoginPage.vue";
+import UserLoginPage from "@/views/UserLoginPage.vue";
 import VisualReportVue from "@/views/VisualReport/VisualReport.vue";
 export const routes: Array<RouteRecordRaw> = [
   {
     path: "/",
     name: "登录页",
-    component: VisualReportVue,
-    // component:UserLoginPage,
+    // component: VisualReportVue,
+    component: UserLoginPage,
+    meta: {
+      access:ACCESS_ENUM.NOT_LOGIN
+    }
   },
   {
     path: "/visualReport",
     name: "可视化看板",
-    component:VisualReportVue
+    component: VisualReportVue
   },
   // {
   //   path: "/add/app/:id",
@@ -94,28 +97,29 @@ export const routes: Array<RouteRecordRaw> = [
   //   },
   // },
   {
-  path: "/student",
+    path: "/student",
     name: "心理学生端",
     component: StudentLayout,
     children: [
-       {
-    path: "/student",
-    name: "心理学生端首页",
-    component:StuHome
-  },
-  {
-    path: "/student/report",
-    name: "学生查看报告",
-    component:StuReport
-  },
-  {
-    path: "/student/answer",
-    name: "学生进行测评",
-    component:StuAnswer
-  },
+      {
+        path: "/student",
+        name: "心理学生端首页",
+        component: StuHome
+      },
+      {
+        path: "/student/report",
+        name: "学生查看报告",
+        component: StuReport,
+      },
+      {
+        path: "/student/answer",
+        name: "学生进行测评",
+        component: StuAnswer,
+        
+      },
     ]
-},
- 
+  },
+
   {
     path: "/teacher",
     name: "普通教师",

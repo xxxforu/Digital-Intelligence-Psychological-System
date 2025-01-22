@@ -1,45 +1,59 @@
-import axios from "axios";
 import { Message } from "@arco-design/web-vue";
-
+import axios from "axios";
 const myAxios = axios.create({
-  baseURL: "http://localhost:8101",
+  baseURL: "/api",
   timeout: 60000,
-  withCredentials: true,
+ withCredentials: true, // 允许携带跨域 Cookie
 });
+// 获取指定名称的 Cookie
+function getCookie(name:string) {
+  console.log(document.cookie);
+  
+  const value:any = `; ${document.cookie}`;
+  const parts:any = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+}
 
 // 全局请求拦截器
 myAxios.interceptors.request.use(
-  function (config) {
-    // Do something before request is sent
+ function (config) {
+    const sessionId = getCookie('JSESSIONID'); // 获取 JSESSIONID Cookie
+
+    console.log(sessionId);
+    
+    if (sessionId) {
+      config.headers.Cookie = `JSESSIONID=${sessionId}`; // 将 Cookie 添加到请求头
+    }
     return config;
   },
   function (error) {
-    // Do something with request error
     return Promise.reject(error);
   }
 );
 
 // 全局响应拦截器
 myAxios.interceptors.response.use(
-  function (response) {
-    console.log(response);
+  function (response:any) {
     // Any status code that lie within the range of 2xx cause this function to trigger
     // Do something with response data
     const { data } = response;
-
     // 未登录
-    if (data.code === 40100) {
+    if (data==="未登录") {
       // 不是获取用户信息的请求，并且用户目前不是已经在用户登录页面，则跳转到登录页面
       if (
-        !response.request.responseURL.includes("user/get/login") &&
-        !window.location.pathname.includes("/user/login")
+        !response.request.responseURL.includes("/login") &&
+        !(window.location.pathname==="/")
       ) {
+        
+        window.location.href = `/`;
         Message.warning("请先登录");
-        window.location.href = `/user/login?redirect=${window.location.href}`;
       }
     }
+    // if ("code" in data) {
+    //   if(data.code!== 200 && data.code!==0) return Promise.reject(response);
+    // } else return Promise.reject(response)
 
-    return response;
+    return Promise.resolve(data || {})
   },
   function (error) {
     // Any status codes that falls outside the range of 2xx cause this function to trigger

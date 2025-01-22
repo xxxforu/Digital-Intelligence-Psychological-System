@@ -1,4 +1,5 @@
 import ACCESS_ENUM from "@/access/accessEnum";
+import { getLoginUser } from "@/api/appController";
 import { defineStore } from "pinia";
 import { ref } from "vue";
 
@@ -7,7 +8,8 @@ import { ref } from "vue";
  */
 export const useLoginUserStore = defineStore("loginUser", () => {
   const loginUser = ref<API.LoginUserVO>({
-    userName: "未登录",
+    name: "未登录",
+    role:ACCESS_ENUM.NOT_LOGIN
   });
 
   function setLoginUser(newLoginUser: API.LoginUserVO) {
@@ -15,25 +17,12 @@ export const useLoginUserStore = defineStore("loginUser", () => {
   }
 
   async function fetchLoginUser() {
-    // const res = await getLoginUserUsingGet();
-    const res = {
-      code: 200,
-      msg: "success",
-      data: {
-        createTime: "2024",
-        id: 1111111,
-        updateTime: "2025",
-        userName: "pp水",
-        userRole: "psychologist",
-      }
-    }
-    if (res.code === 0 && res.data) {
-      loginUser.value = res.data;
-    } else {
-      loginUser.value = { userRole: ACCESS_ENUM.NOT_LOGIN };
-    }
-    console.log(loginUser.value);
-    
+    const res = await getLoginUser();
+  if (res && res.data) {
+    loginUser.value = res.data; // 提取 data 部分
+  } else {
+    loginUser.value = { role: ACCESS_ENUM.NOT_LOGIN };
+  }
   }
 
   return { loginUser, setLoginUser, fetchLoginUser };

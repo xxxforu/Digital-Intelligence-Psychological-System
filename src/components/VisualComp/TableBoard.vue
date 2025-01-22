@@ -1,5 +1,5 @@
 <template>
-    <div class="tableBoard" :class="{ hollanderBox: isHollander }"
+    <div class="tableBoard" :class="{ hollanderBox: isHollander, earlyWarningBox: isEarlyWarning }"
         :style="{ width: boxWidth + 'px', height: boxHeight + 'px' }">
         <div style="position:relative;height:100%;width:100%;">
             <h3 class="boardTitle">{{ boardTitle }}</h3>
@@ -17,6 +17,11 @@ export default defineComponent({
         boxWidth: Number,
         boxHeight: Number,
         isHollander: {
+            type: Boolean,
+            default: false,
+            required: false
+        },
+        isEarlyWarning: {
             type: Boolean,
             default: false,
             required: false
@@ -80,6 +85,18 @@ export default defineComponent({
 
         .row-item .ceil:nth-child(2) {
             width: 250px !important;
+        }
+    }
+}
+
+.earlyWarningBox {
+    ::v-deep .dv-scr-board {
+        .header .header-item:nth-child(2) {
+            width: 180px !important;
+        }
+
+        .row-item .ceil:nth-child(2) {
+            width: 180px !important;
         }
     }
 }

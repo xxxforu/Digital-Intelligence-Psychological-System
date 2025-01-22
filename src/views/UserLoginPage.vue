@@ -13,7 +13,7 @@
       <form class="form">
         <div class="form-group">
           <label for="username">账号</label>
-          <a-input id="number" placeholder="请输入账户名" allow-clear>
+          <a-input id="number" v-model="form.number" placeholder="请输入账户名" allow-clear>
             <template #prefix>
               <img src="../assets/image/loginUser.png" alt="loginUser">
             </template>
@@ -21,35 +21,42 @@
         </div>
         <div class="form-group">
           <label for="password">密码</label>
-          <a-input-password id="password" v-model:visibility="visibility" :defaultVisibility="false" allow-clear
-            placeholder="请输入密码">
+          <a-input-password id="password" v-model="form.password" v-model:visibility="visibility"
+            :defaultVisibility="false" allow-clear placeholder="请输入密码">
             <template #prefix>
               <img src="../assets/image/loginPassword.png" alt="loginUser">
             </template>
           </a-input-password>
-          <div class="helper-text">账号或密码错误</div>
+          <div class="helper-text" :style="{ visibility: loginError ? 'visible' : 'hidden' }"
+            :class="{ hidden: !loginError }">
+            账号或密码错误</div>
         </div>
-        <button type="submit" class="login-button" @click="logIn">确定</button>
+        <button class="login-button" @click="handleSubmit" :class="{ active: active }">确定</button>
       </form>
     </div>
     <div class="loginCover">
-      <img src="../assets/image/loginCover.png" alt="loginCover">
+      <img v-if="loginType === 'student'" src="../assets/image/loginCover.png" alt="loginCover">
+      <img v-else src="../assets/image/teacherLoginCover.png" alt="teacherLoginCover">
     </div>
   </div>
 
 </template>
 
 <script setup lang="ts">
-import { userLoginUsingPost } from "@/api/userController";
-import { useLoginUserStore } from "@/store/userStore";
-import message from "@arco-design/web-vue/es/message";
-import { reactive, ref } from "vue";
+import { studentLoginPOST } from '@/api/studentController';
+import { useLoginUserStore } from '@/store/userStore';
+import { Message } from '@arco-design/web-vue';
+import {
+  computed,
+  reactive, ref
+} from "vue";
 import { useRouter } from "vue-router";
 
 const loginUserStore = useLoginUserStore();
 const router = useRouter();
 
 const loginType = ref("student")
+let loginError = ref(false)
 const logIn = () => {
   console.log(loginType.value);
 
@@ -62,30 +69,54 @@ const logIn = () => {
 }
 
 const form = reactive({
-  userAccount: "",
-  userPassword: "",
-} as API.UserLoginRequest);
+  // number: "2310416",
+  // password: "quanta2025",
+  number: "",
+  password: "",
+} as API.LoginParams);
 const visibility = ref(true);
 
+const active = computed(() => {
+  return form.number && form.password
+})
 /**
  * 提交
  */
-const handleSubmit = async () => {
-  const res = await userLoginUsingPost(form);
-  if (res.data.code === 0) {
+const handleSubmit = async (e: any) => {
+  e.preventDefault();
+  const res = await studentLoginPOST(form);
+  if (res.code === 0) {
     await loginUserStore.fetchLoginUser();
-    message.success("登录成功");
+    Message.success("登录成功");
     router.push({
-      path: "/",
-      replace: true,
+      path: "/student",
     });
   } else {
-    message.error("登录失败，" + res.data.message);
+    loginError.value = true
+    setTimeout(() => {
+      loginError.value = false; // 三秒后隐藏
+    }, 3000);
   }
 };
 </script>
 <style lang="scss" scoped>
 #userLoginPage {
+  ::v-deep input[type="password"]::-webkit-credentials-cramble-button {
+    appearance: none;
+  }
+
+  ::v-deep input[type="password"]::-ms-reveal {
+    display: none;
+  }
+
+  ::v-deep input[type="password"]::-ms-clear {
+    display: none;
+  }
+
+  ::v-deep input[type="password"] {
+    -webkit-appearance: none;
+  }
+
   width: 100vw;
   height: 100vh;
   background-color: #fff;
@@ -210,8 +241,7 @@ const handleSubmit = async () => {
       box-shadow: 0px 8px 9px 0px rgba(0, 0, 0, 0.1);
     }
 
-    .active,
-    .login-button:hover {
+    .active {
       background: rgb(77, 161, 255);
     }
 
@@ -223,6 +253,12 @@ const handleSubmit = async () => {
       line-height: 22px;
       text-align: right;
       margin-top: 10px;
+    }
+
+    /* 隐藏时的占位样式 */
+    .hidden {
+      visibility: hidden;
+      opacity: 0;
     }
   }
 
