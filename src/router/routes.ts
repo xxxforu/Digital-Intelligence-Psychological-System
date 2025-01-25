@@ -29,7 +29,10 @@ export const routes: Array<RouteRecordRaw> = [
   {
     path: "/visualReport",
     name: "可视化看板",
-    component: VisualReportVue
+    component: VisualReportVue,
+    meta: {
+      access:ACCESS_ENUM.NOT_LOGIN
+    }
   },
   // {
   //   path: "/add/app/:id",
@@ -104,18 +107,26 @@ export const routes: Array<RouteRecordRaw> = [
       {
         path: "/student",
         name: "心理学生端首页",
-        component: StuHome
+        component: StuHome,
+        meta: {
+          access:ACCESS_ENUM.STUDENT
+        }
       },
       {
         path: "/student/report",
         name: "学生查看报告",
         component: StuReport,
+        meta: {
+          access:ACCESS_ENUM.STUDENT
+        }
       },
       {
         path: "/student/answer",
         name: "学生进行测评",
         component: StuAnswer,
-        
+        meta: {
+          access:ACCESS_ENUM.STUDENT
+        }
       },
     ]
   },

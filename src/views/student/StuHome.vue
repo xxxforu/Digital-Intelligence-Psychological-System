@@ -103,7 +103,7 @@ export default ({
                 slotName: 'action',
             },
         ];
-        const data = ref<API.QuestionItem[]>([]);
+        const data = ref<API.StueQuestionItem[]>([]);
         /**
          * 加载数据
          */
@@ -113,7 +113,6 @@ export default ({
             current: 1,
             total: 300,
             pageSize: 10
-
         })
         const loadData = async () => {
             const params = {
@@ -122,7 +121,7 @@ export default ({
             };
             const res = await studentQuestionListGET(params);
             state.loading = false
-            paginationProp.value.total = res.data.total
+            paginationProp.value.total = res.data.total || 10
             data.value = res.data?.questions || []
         };
         watchEffect(() => {
@@ -131,7 +130,7 @@ export default ({
         const pageChange = (crt: number) => {
             paginationProp.value.current = crt
         }
-        const setTestStore = (record: API.QuestionItem) => {
+        const setTestStore = (record: API.StueQuestionItem) => {
             testInformStore.setTestInform({
                 questionId: record.questionId,
                 questionType: record.questionType
@@ -160,7 +159,7 @@ export default ({
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: space-around;
 
     .title {
         width: 100%;

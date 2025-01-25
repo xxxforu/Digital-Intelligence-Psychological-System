@@ -36,6 +36,11 @@ export default defineComponent({
             default: false,
             required: false,
         },
+        isReport: {
+            type: Boolean,
+            required: false,
+            default: false
+        },
     },
     setup(props) {
         const radarBoard = ref(null)
@@ -76,8 +81,8 @@ export default defineComponent({
                         indicator: props.data.indicator,
                         radius: props.radius,
                         axisName: {
-                            color: '#fff',
-                            fontSize: 16,
+                            color: props.isReport ? "#000" : '#fff',
+                            fontSize: props.isReport ? 14 : 16,
                         }
                     }
                 ],
@@ -85,6 +90,9 @@ export default defineComponent({
                     {
                         type: 'radar',
                         radarIndex: 0,
+                        lineStyle: {
+                            color: "transparent"
+                        },
                         data: [
                             {
                                 value: props.data.value,

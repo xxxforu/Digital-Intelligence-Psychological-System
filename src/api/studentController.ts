@@ -15,10 +15,10 @@ export async function studentLoginPOST(
 }
 // 学生获取测评列表
 export async function studentQuestionListGET(
-    params: API.StuGetQuenstionList,
+    params: API.GetQuenstionList,
     options?: { [key: string]: any },
 ) {
-    return request<API.QuestionListResponse>('/student/question/getStudentQuestionList', {
+    return request<API.StuQuestionListResponse>('/student/question/getStudentQuestionList', {
         method: "GET",
         params: {
             ...params,
@@ -52,4 +52,26 @@ export async function studentAnswerCommit(
         data: body,
         ...(options || {})
     })
+}
+// 获取社会情感报告
+export async function stuSFReportGET(
+    questionId: String,
+) {
+    return request<API.StuSFReportProps>(`/student/answer/socialFeeling/report?questionId=${questionId}`, {
+        method: "GET",
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    });
+}
+// 获取霍兰德多元智能混合报告
+export async function stuIPReportGET(
+    questionId: String,
+) {
+    return request<API.IPReportProps>(`/student/answer/intelligenceAndProfessionReport?questionId=${questionId}`, {
+        method: "GET",
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    });
 }

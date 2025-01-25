@@ -24,9 +24,7 @@ router.beforeEach(async (to, from, next) => {
       !loginUser ||
       !loginUser.role ||
       loginUser.role === ACCESS_ENUM.NOT_LOGIN
-    ) {
-      console.log("tiaozhuan");
-      
+    ) {      
       next(`/`);
     }
     // 如果已经登录了，判断权限是否足够，如果不足，跳转到无权限页面

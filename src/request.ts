@@ -17,13 +17,10 @@ function getCookie(name:string) {
 // 全局请求拦截器
 myAxios.interceptors.request.use(
  function (config) {
-    const sessionId = getCookie('JSESSIONID'); // 获取 JSESSIONID Cookie
-
-    console.log(sessionId);
-    
+    const sessionId = getCookie('JSESSIONID'); // 获取 JSESSIONID Cookie    
     if (sessionId) {
       config.headers.Cookie = `JSESSIONID=${sessionId}`; // 将 Cookie 添加到请求头
-    }
+    } 
     return config;
   },
   function (error) {

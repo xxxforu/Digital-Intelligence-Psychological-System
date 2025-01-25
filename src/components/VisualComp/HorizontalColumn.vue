@@ -1,7 +1,7 @@
 <template>
     <div class="horizontalColumn" :style="{ width: boxWidth + 'px', height: boxHeight + 'px' }">
         <div style="position:relative;height:100%;width:100%;">
-            <h3 class="boardTitle">{{ boardTitle }}</h3>
+            <h3 class="boardTitle" v-if="boardTitle">{{ boardTitle }}</h3>
             <div class="chart" ref="horizontalColumn" style="width:100%;height:100%;"></div>
         </div>
     </div>
@@ -19,7 +19,15 @@ echarts.use([GridComponent, BarChart, CanvasRenderer, DatasetComponent]);
 export default defineComponent({
     props: {
         currentType: Number,
-        boardTitle: String,
+        boardTitle: {
+            type: String,
+            required: false
+        },
+        isReport: {
+            type: Boolean,
+            required: false,
+            default: false
+        },
         dataSource: Array,
         boxWidth: Number,
         boxHeight: Number,
@@ -52,7 +60,7 @@ export default defineComponent({
             const horizontalColumnChart = echarts.init(horizontalColumn.value);
             const option = {
                 textStyle: {
-                    color: "#fff",
+                    color: props.isReport ? "#000" : "#fff",
                 },
                 dataset: {
                     source: props.dataSource
@@ -63,7 +71,7 @@ export default defineComponent({
                     animationDuration: 300,
                     animationDurationUpdate: 300,
                     axisLabel: {
-                        fontSize: 18
+                        fontSize: props.isReport ? 16 : 18
                     }
                 },
                 xAxis: {

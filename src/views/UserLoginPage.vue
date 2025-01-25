@@ -43,7 +43,9 @@
 </template>
 
 <script setup lang="ts">
+import ACCESS_ENUM from '@/access/accessEnum';
 import { studentLoginPOST } from '@/api/studentController';
+import { teacherLoginPOST } from '@/api/teacherController';
 import { useLoginUserStore } from '@/store/userStore';
 import { Message } from '@arco-design/web-vue';
 import {
@@ -57,22 +59,12 @@ const router = useRouter();
 
 const loginType = ref("student")
 let loginError = ref(false)
-const logIn = () => {
-  console.log(loginType.value);
-
-  if (loginType.value === "student") {
-    router.push('/student')
-  }
-  else {
-    router.push('/psychologist')
-  }
-}
-
 const form = reactive({
-  // number: "2310416",
-  // password: "quanta2025",
-  number: "",
-  password: "",
+  number: "2310415",
+  // number: "19999999999",
+  password: "quanta2025",
+  //number: "",
+  //password: "",
 } as API.LoginParams);
 const visibility = ref(true);
 
@@ -84,13 +76,32 @@ const active = computed(() => {
  */
 const handleSubmit = async (e: any) => {
   e.preventDefault();
-  const res = await studentLoginPOST(form);
+  var res: API.BasicResponse;
+  if (loginType.value === "student") { res = await studentLoginPOST(form); }
+  else { res = await teacherLoginPOST(form) }
+
   if (res.code === 0) {
     await loginUserStore.fetchLoginUser();
     Message.success("登录成功");
-    router.push({
-      path: "/student",
-    });
+    const loginUser = <API.LoginUserVO>(loginUserStore.loginUser)
+
+    switch (loginUser.role) {
+      case ACCESS_ENUM.STUDENT:
+        router.push({
+          path: "/student",
+        });
+        break;
+      case ACCESS_ENUM.PSYCHOLOGIST:
+        router.push({
+          path: "/psychologist",
+        });
+        break;
+      case ACCESS_ENUM.TEACHER:
+        router.push({
+          path: "/teacher",
+        });
+        break;
+    }
   } else {
     loginError.value = true
     setTimeout(() => {

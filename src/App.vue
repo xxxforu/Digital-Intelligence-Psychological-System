@@ -1,5 +1,5 @@
 <template>
-  <div id="app">
+  <div id="app" lang="ts">
     <!-- <template v-if="route.path.startsWith('/psychologist') || route.path.startsWith('/teacher')">
       <TeacherLayout />
     </template>
@@ -10,7 +10,7 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import { onMounted } from "vue";
 import { useRoute } from "vue-router";
 
@@ -26,7 +26,20 @@ const doInit = () => {
 onMounted(() => {
   doInit();
 });
-//background-color: #020308;
+
+const originalRO = window.ResizeObserver;
+window.ResizeObserver = class extends originalRO {
+  constructor(callback) {
+    super((entries, observer) => {
+      try {
+        callback(entries, observer);
+      } catch (e) {
+        console.error("ResizeObserver error:", e);
+      }
+    });
+  }
+};
+
 </script>
 
 <style scoped>
