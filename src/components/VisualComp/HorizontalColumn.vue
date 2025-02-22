@@ -110,8 +110,6 @@ export default defineComponent({
             };
 
             horizontalColumnChart.setOption(option);
-
-
         });
 
         return {

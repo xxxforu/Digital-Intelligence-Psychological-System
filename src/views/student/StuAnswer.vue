@@ -1,75 +1,81 @@
 <template>
     <a-spin v-if="loading" class="arcoSpin" />
     <div v-else class="quiz-app">
-        <!-- 左侧答题卡 -->
-        <div class="answer-card">
-            <h3>答题卡</h3>
-            <div class="numberBox">
-                <ul>
+        <!-- 上方文字提示 -->
+        <p class="tips">{{ tips }}</p>
+        <div class="questionBox">
+            <!-- 左侧答题卡 -->
+            <div class="answer-card">
+                <h3>答题卡</h3>
+                <!-- <div class="numberBox"> -->
+                <ul class="numberBox">
                     <li v-for="(question, qIndex) in questions" :key="qIndex"
                         :class="{ answered: answers[question?.index - 1], active: currentQuestionIndex === qIndex }"
                         @click="goToQuestion(qIndex)">
                         {{ question?.index }}
                     </li>
                 </ul>
-            </div>
-            <div class="scrollLogo">
-                <img src="../../assets/image/scrollPoint.png" alt="scrollPoint">
+                <!-- </div> -->
+                <div class="scrollLogo">
+                    <img src="../../assets/image/scrollPoint.png" alt="scrollPoint">
+                </div>
+
+                <p class="currentProgress">进度：{{ validCount }}/{{ questions.length }}</p>
+                <div class="tip">
+                    <div class="tipItem">
+                        <div class="tipColor" style="background:#1919324D"></div>未答
+                    </div>
+                    <div class="tipItem">
+                        <div class="tipColor" style="background:#EFF2FF"></div>已答
+                    </div>
+                    <div class="tipItem">
+                        <div class="tipColor" style="background:#00B2FF"></div>当前
+                    </div>
+                </div>
+                <div class="studentDetail">
+                    <p>姓名：{{ loginUser.name }}</p>
+                    <p>班级：{{ loginUser.classesName }}</p>
+                    <p>学号：{{ loginUser.number }}</p>
+                </div>
             </div>
 
-            <p class="currentProgress">进度：{{ validCount }}/{{ questions.length }}</p>
-            <div class="tip">
-                <div class="tipItem">
-                    <div class="tipColor" style="background:#1919324D"></div>未答
+            <!-- 右侧答题区域 -->
+            <div class="quiz-container">
+                <div class="progress-bar">
+                    <div class="progress" :style="{ width: ((validCount) / questions.length) * 100 + '%' }">
+                    </div>
                 </div>
-                <div class="tipItem">
-                    <div class="tipColor" style="background:#EFF2FF"></div>已答
+                <div class="question-block">
+                    <p class="secondDimension" v-if="questions[currentQuestionIndex]?.secondDimension">【{{
+                        questions[currentQuestionIndex]?.secondDimension }}】</p>
+                    <p class="questionTitle">{{ questions[currentQuestionIndex]?.index }}. {{
+                        questions[currentQuestionIndex]?.title }}</p>
+                    <ul class="options">
+                        <li v-for="(option, oIndex) in questions[currentQuestionIndex]?.options" :key="oIndex"
+                            class="option">
+                            <label style="cursor:pointer;user-select:none;">
+                                <input type="radio" :name="'question-' + questions[currentQuestionIndex]?.index"
+                                    :value="option.key" v-model="answers[questions[currentQuestionIndex]?.index - 1]"
+                                    @change="goToNext()" />
+                                {{ option.value }}
+                            </label>
+                        </li>
+                    </ul>
                 </div>
-                <div class="tipItem">
-                    <div class="tipColor" style="background:#00B2FF"></div>当前
+                <div class="navigation-buttons">
+                    <button @click="goToPrevious" :disabled="currentQuestionIndex === 0">上一题</button>
+                    <button @click="goToNext" :disabled="currentQuestionIndex === questions.length - 1"
+                        v-if="validCount !== questions.length">下一题</button>
+                    <button class="submit-button" v-else @click="submitAnswers">提交答案</button>
                 </div>
-            </div>
-            <div class="studentDetail">
-                <p>姓名：{{ loginUser.name }}</p>
-                <p>班级：{{ loginUser.classesName }}</p>
-                <p>学号：{{ loginUser.number }}</p>
-            </div>
-        </div>
-
-        <!-- 右侧答题区域 -->
-        <div class="quiz-container">
-            <div class="progress-bar">
-                <div class="progress" :style="{ width: ((validCount) / questions.length) * 100 + '%' }">
-                </div>
-            </div>
-            <div class="question-block">
-                <p class="secondDimension">【{{ questions[currentQuestionIndex]?.secondDimension }}】</p>
-                <p class="questionTitle">{{ questions[currentQuestionIndex]?.index }}. {{
-                    questions[currentQuestionIndex]?.title }}</p>
-                <ul class="options">
-                    <li v-for="(option, oIndex) in questions[currentQuestionIndex]?.options" :key="oIndex"
-                        class="option">
-                        <label>
-                            <input type="radio" :name="'question-' + questions[currentQuestionIndex]?.index"
-                                :value="option.key" v-model="answers[questions[currentQuestionIndex]?.index - 1]"
-                                @change="goToNext()" />
-                            {{ option.value }}
-                        </label>
-                    </li>
-                </ul>
-            </div>
-            <div class="navigation-buttons">
-                <button @click="goToPrevious" :disabled="currentQuestionIndex === 0">上一题</button>
-                <button @click="goToNext" :disabled="currentQuestionIndex === questions.length - 1"
-                    v-if="validCount !== questions.length">下一题</button>
-                <button class="submit-button" v-else @click="submitAnswers">提交答案</button>
-            </div>
-            <!-- <div class="auto-next">
+                <!-- <div class="auto-next">
                 <a-switch v-model="autoNext" checked-color="#00B2FF" unchecked-color="#BABAC2" type="circle"
                     style="margin-right:10px" />答题后自动跳转下一题
             </div> -->
 
+            </div>
         </div>
+
     </div>
 </template>
 
@@ -95,9 +101,11 @@ export default {
         onMounted(() => {
             loadData()
         })
+        let tips = ref("")
         const loadData = async () => {
             const res = await studentGetQuestion(testInform.questionId || "")
             loading.value = false
+            tips.value = res.data.questionDesc
             questions.value = res.data.questionContent || {}
             questionDesc.value = res.data.questionDesc || ""
         }
@@ -123,7 +131,6 @@ export default {
                     currentQuestionIndex.value++;
                 }, 300)
             }
-            console.log("answer::::", answers.value);
         };
 
         // 跳转到指定题目
@@ -131,7 +138,7 @@ export default {
             currentQuestionIndex.value = index;
         };
 
-        // 提交答案的函数
+        // 提交答案
         const submitAnswers = async () => {
             loading.value = true
             const res: API.BasicResponse = await studentAnswerCommit({
@@ -139,28 +146,15 @@ export default {
                 questionType: testInform.questionType,
                 choices: answers.value
             } as API.QuestionCommit)
-            console.log(res);
             if (res.code === 0) {
                 loading.value = false
                 Message.success("提交成功！")
                 router.go(-1)
+            } else {
+                Message.error(res.msg || "提交失败！")
+                loading.value = false
+                router.go(-1)
             }
-
-
-            // // 根据 secondAbility 属性分类答案
-            // questions.value.forEach((question) => {
-            //     const ability = question.secondAbility;
-            //     if (!sortedAnswers[ability]) {
-            //         sortedAnswers[ability] = [];
-            //     }
-            //     sortedAnswers[ability].push(answers.value[question?.index] || null);
-            // });
-
-            // console.log('分类排序后的答案:', sortedAnswers);
-            // alert('答案已提交，请查看控制台！');
-
-            // 返回给后端的格式化数据
-            // return sortedAnswers;
         };
 
         // 计算属性，用于获取有效值数量
@@ -180,6 +174,7 @@ export default {
             loading,
             validCount,
             loginUser,
+            tips,
         };
     }
 };
@@ -199,10 +194,30 @@ export default {
 
 .quiz-app {
     display: flex;
-    gap: 20px;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
     width: 90%;
-    height: 90%;
-    margin: auto;
+    height: 100%;
+
+    .tips {
+        color: rgba(25, 25, 50, 0.7);
+        font-family: Urbanist;
+        font-size: 18px;
+        font-weight: 400;
+        line-height: 22px;
+        text-align: left;
+        width: 100%;
+        margin: 0;
+    }
+
+    .questionBox {
+        display: flex;
+        gap: 20px;
+        width: 100%;
+        height: 90%;
+    }
+
 }
 
 .answer-card {
@@ -220,7 +235,7 @@ export default {
 }
 
 .numberBox {
-    height: 50%;
+    height: 50% !important;
 }
 
 .tip {
@@ -251,8 +266,8 @@ export default {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     column-gap: auto;
-    align-content: space-around;
-    height: 100%;
+    align-content: start;
+    max-height: 50%;
     overflow-y: scroll;
     scrollbar-width: none;
     /* Firefox */
@@ -263,8 +278,6 @@ export default {
         display: none;
         /* Chrome Safari */
     }
-
-
 }
 
 .answer-card li {
@@ -281,7 +294,6 @@ export default {
     border-radius: 5px;
     box-shadow: 0px 6px 8px 0px rgba(0, 0, 0, 0.1);
     font-size: 18px;
-
 }
 
 .answer-card li.active {
@@ -313,7 +325,6 @@ export default {
 .progress {
     height: 100%;
     border-radius: 100px;
-    /* 好看颜色 */
     background: linear-gradient(90.00deg, rgb(77, 255, 223), rgb(77, 161, 255) 100%);
 }
 

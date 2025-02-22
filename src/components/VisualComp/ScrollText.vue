@@ -1,48 +1,49 @@
 <template>
     <div class="scrollText" :style="{ width: boxWidth + 'px', height: boxHeight + 'px' }">
         <h3 class="boardTitle">{{ boardTitle }}</h3>
-        <div class="scroll-content" v-if="isHollander">
+        <div class="scroll-content" :style="{ animationDuration: animationDuration + 's' }" ref="scrollContent"
+            v-if="isHollander">
             <div class="scroll-item" v-for="(item, index) in data" :key="index">
                 <div class="hollanderRate">
                     <div class="colorBox">{{ index - 1 }}</div>
-                    <p class="content">{{ item.type }}</p>
+                    <p class="content">{{ item.resultName }}</p>
                 </div>
                 <div v-if="HLDTypeDetail">
                     <p class="title">【类型特点】</p>
-                    <p class="content">{{ item.characters }}</p>
+                    <p class="content">{{ item.characterName }}</p>
                     <p class="title">【类型解释】</p>
-                    <p class="content">{{ item.explain }}</p>
+                    <p class="content">{{ item.characterDesc }}</p>
                 </div>
                 <div v-else-if="HLDDimensionDetail">
                     <p class="title">【相关生活案例】</p>
-                    <p class="content">{{ item.examples }}</p>
+                    <p class="content">{{ item.characterCase }}</p>
                     <p class="title">【推荐专业定位】</p>
-                    <p class="content">{{ item.preferredWork }}</p>
+                    <p class="content">{{ item.majorLocation }}</p>
                 </div>
             </div>
             <div class="scroll-item" v-for="(item, index) in data" :key="index">
                 <div class="hollanderRate">
                     <div class="colorBox">{{ index - 1 }}</div>
-                    <p class="content">{{ item.type }}</p>
+                    <p class="content">{{ item.resultName }}</p>
                 </div>
                 <div v-if="HLDTypeDetail">
                     <p class="title">【类型特点】</p>
-                    <p class="content">{{ item.characters }}</p>
+                    <p class="content">{{ item.characterName }}</p>
                     <p class="title">【维度解释】</p>
-                    <p class="content">{{ item.explain }}</p>
+                    <p class="content">{{ item.characterDesc }}</p>
                 </div>
                 <div v-else-if="HLDDimensionDetail">
                     <p class="title">【相关生活案例】</p>
-                    <p class="content">{{ item.examples }}</p>
+                    <p class="content">{{ item.characterCase }}</p>
                     <p class="title">【推荐专业定位】</p>
-                    <p class="content">{{ item.preferredWork }}</p>
+                    <p class="content">{{ item.majorLocation }}</p>
                 </div>
 
             </div>
 
 
         </div>
-        <div class="scroll-content" v-else>
+        <div class="scroll-content" :style="{ animationDuration: animationDuration + 's' }" ref="scrollContent" v-else>
             <div class="scroll-item" v-for="(item, index) in data" :key="index">
                 <p class="title">【{{ item.title }}】</p>
                 <p class="content">{{ item.content }}</p>
@@ -57,7 +58,7 @@
 </template>
 
 <script>
-import { defineComponent } from 'vue';
+import { computed, defineComponent, onMounted, ref } from 'vue';
 export default defineComponent({
     props: {
         isHollander: {
@@ -79,14 +80,36 @@ export default defineComponent({
         data: Array,
         boxWidth: Number,
         boxHeight: Number,
-    },
-    setup() {
 
-        components: { }
+    },
+    setup(props) {
+        const scrollContent = ref(null); // 获取滚动内容的 DOM 元素
+        const contentHeight = ref(0); // 存储滚动内容的总高度
+
+        // 在组件挂载后计算滚动内容的总高度
+        onMounted(() => {
+            if (scrollContent.value) {
+                const items = scrollContent.value.querySelectorAll('.scroll-item');
+                let totalHeight = 0;
+                items.forEach(item => {
+                    totalHeight += item.offsetHeight; // 获取每个滚动项的实际高度
+                });
+                contentHeight.value = totalHeight;
+            }
+        });
+
+        // 根据总高度和期望的滚动速度计算动画持续时间
+        const animationDuration = computed(() => {
+            const speed = 30; // 期望的滚动速度（px/s）
+            if (contentHeight.value)
+                return contentHeight.value / speed;
+            else return (props.boxHeight + 250) / speed;
+        });
 
         return {
-
-        }
+            scrollContent,
+            animationDuration
+        };
     }
 })
 </script>
@@ -139,7 +162,7 @@ export default defineComponent({
     display: flex;
     flex-direction: column;
     //滚动速度
-    animation: scroll 40s linear infinite;
+    animation: scroll linear infinite;
 }
 
 .scroll-item {
@@ -168,6 +191,8 @@ export default defineComponent({
         line-height: 25px;
         letter-spacing: 0%;
         text-align: left;
+        white-space: pre-line;
+
     }
 }
 

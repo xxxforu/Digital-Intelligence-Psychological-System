@@ -1,12 +1,6 @@
 /**
  * 权限定义
  */
-// const ACCESS_ENUM = {
-//   NOT_LOGIN: "notLogin",
-//   USER: "user",
-//   ADMIN: "admin",
-// };
-
 const ACCESS_ENUM = {
   NOT_LOGIN: "notLogin",  // 未登录
   STUDENT: "student",    // 学生

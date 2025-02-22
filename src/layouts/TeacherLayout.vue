@@ -3,7 +3,7 @@
         <a-layout style="min-height: 100vh;width:100vw;height:100vh;">
             <a-layout>
                 <a-layout-sider theme="light">
-                    <p id="title">数智平台</p>
+                    <p id="title">数智心理平台</p>
                     <router-link v-if="loginUser.role === ACCESS_ENUM.PSYCHOLOGIST" to="/psychologist">
                         <div class="routerItem"
                             :class="{ active: route.path === '/psychologist' || route.path === '/teacher' }">
@@ -32,7 +32,8 @@
                         </div>
                     </router-link>
 
-                    <router-link v-if="loginUser.role === ACCESS_ENUM.TEACHER" to="/psychologist">
+
+                    <router-link v-if="loginUser.role === ACCESS_ENUM.TEACHER" to="/teacher">
                         <div class="routerItem"
                             :class="{ active: route.path === '/psychologist' || route.path === '/teacher' }">
                             <img v-if="route.path === '/psychologist' || route.path === '/teacher'"
@@ -41,7 +42,7 @@
                             <p>测评管理</p>
                         </div>
                     </router-link>
-                    <router-link v-if="loginUser.role === ACCESS_ENUM.TEACHER" to="/psychologist/dataBoard">
+                    <router-link v-if="loginUser.role === ACCESS_ENUM.TEACHER" to="/teacher/dataBoard">
                         <div class="routerItem" :class="{ active: route.path.includes('dataBoard') }">
                             <img v-if="route.path.includes('dataBoard')" src="../assets/image/dataBoardActive.png"
                                 alt="dataBoard">
@@ -66,6 +67,7 @@
 
 <script lang='ts'>
 import ACCESS_ENUM from '@/access/accessEnum';
+import { logoutPOST } from '@/api/appController';
 import { useLoginUserStore } from '@/store/userStore';
 import { defineComponent, ref } from 'vue';
 import { useRoute, useRouter } from "vue-router";
@@ -75,8 +77,10 @@ export default defineComponent({
         const route = useRoute();
         const loginUserStore = useLoginUserStore();
         const loginUser = ref<API.LoginUserVO>(loginUserStore.loginUser)
+
         const handleLogout = () => {
             router.push('/')
+            logoutPOST()
         }
         components: { }
         return { loginUser, ACCESS_ENUM, handleLogout, route }
@@ -124,6 +128,7 @@ export default defineComponent({
     }
 
     .logOut {
+        cursor: pointer;
         bottom: 5%;
         position: absolute;
     }

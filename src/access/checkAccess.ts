@@ -12,12 +12,8 @@ const checkAccess = (
 ) => {
   // 获取当前登录用户具有的权限（如果没有 loginUser，则表示未登录）
   const loginUserAccess = loginUser?.role ?? ACCESS_ENUM.NOT_LOGIN;
-  console.log(loginUserAccess);
-  
-  // 暂时先返回true
-  if (loginUserAccess === ACCESS_ENUM.NOT_LOGIN) {
-    console.log("允许进入");
-    
+ 
+  if (needAccess === ACCESS_ENUM.NOT_LOGIN) {
     return true;
   }
   // 如果学生登录才能访问

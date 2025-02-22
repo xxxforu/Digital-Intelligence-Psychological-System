@@ -4,8 +4,8 @@
         <div class="typeList">
             <div class="typeItem" v-for="(item, index) in data" :key="index">
                 <div class="colorBox">{{ item.type0 }}</div>
-                <p style="font-size: 40px;">{{ item.type1 }}</p>
-                <p style="font-size: 20px;">{{ item.type2 }}</p>
+                <p style="font-size: 40px;">{{ item.type2 }}</p>
+                <p style="font-size: 20px;">{{ item.type1 }}</p>
             </div>
         </div>
     </div>
@@ -21,7 +21,6 @@ export default defineComponent({
         boxHeight: Number,
     },
     setup() {
-        components: { }
         return {}
     }
 })

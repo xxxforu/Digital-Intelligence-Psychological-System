@@ -37,12 +37,17 @@ import * as echarts from 'echarts/core';
 import { CanvasRenderer } from 'echarts/renderers';
 import { defineComponent, onMounted, ref } from 'vue';
 
+
 echarts.use([GaugeChart, CanvasRenderer]);
 export default defineComponent({
     props: {
         boardTitle: String,
+        data: {
+            type: Object,
+            required: true,
+        },
     },
-    setup() {
+    setup(props) {
         components: { }
         const gauge0 = ref(null)
         const gauge1 = ref(null)
@@ -94,19 +99,19 @@ export default defineComponent({
                 const gaugeChart2 = echarts.init(gauge2.value)
                 const gaugeDataList = [
                     [{
-                        value: 85,
+                        value: props.data.secondLevel[0].point,
                         detail: {
                             valueAnimation: true,
                             offsetCenter: ['0%', '0%']
                         }
                     }], [{
-                        value: 95,
+                        value: props.data.secondLevel[1].point,
                         detail: {
                             valueAnimation: true,
                             offsetCenter: ['0%', '0%']
                         }
                     }], [{
-                        value: 75,
+                        value: props.data.secondLevel[2].point,
                         detail: {
                             valueAnimation: true,
                             offsetCenter: ['0%', '0%']
@@ -165,29 +170,8 @@ export default defineComponent({
         })
 
 
-        const data = ({
-            title: "关爱能力详解",
-            point: 85,
-            secondLevel: [
-                {
-                    title: "共情力",
-                    point: 85,
-                    level: "较高"
-                },
-                {
-                    title: "信任感",
-                    point: 95,
-                    level: "高"
-                },
-                {
-                    title: "感恩力",
-                    point: 75,
-                    level: "中等"
-                },
-            ]
-        })
+
         return {
-            data,
             gauge0,
             gauge1,
             gauge2,
@@ -286,7 +270,12 @@ $box-width: 800px;
             .level {
                 background-image: url(../../../assets/visualReport/levelBG.png);
                 background-repeat: no-repeat;
-                width: 60px;
+                background-size: 100% 100%;
+                /* 背景图自适应容器大小 */
+                display: inline-block;
+                /* 让 div 宽度根据内容调整 */
+                padding: 0 20px;
+                /* 左右 padding 增加背景图宽度 */
                 height: 60px;
                 text-align: center;
                 font-size: 25px;

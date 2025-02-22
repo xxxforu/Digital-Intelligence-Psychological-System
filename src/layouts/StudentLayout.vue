@@ -2,8 +2,6 @@
     <div id="studentLayout" style="min-height: 100vh;width:100vw;height:100vh;">
         <div class="header">
             <router-link to="/student">{{ route.path === '/student' ? "首页" : "< 返回首页" }}</router-link>
-                    <router-link to="/visualReport">可视化看板（演示用</router-link>
-
                     <a-dropdown @select="handleLogout" :popup-max-height="false">
                         <a-button>{{ currentTime + " " + loginUser.name }}<icon-down /></a-button>
                         <template #content>
@@ -18,10 +16,10 @@
 </template>
 
 <script lang='ts'>
+import { logoutPOST } from '@/api/appController';
 import { useLoginUserStore } from '@/store/userStore';
 import { defineComponent, ref } from 'vue';
 import { useRoute, useRouter } from "vue-router";
-
 
 export default defineComponent({
     setup() {
@@ -31,6 +29,7 @@ export default defineComponent({
         const route = useRoute()
         const handleLogout = () => {
             router.push('/')
+            logoutPOST()
         }
 
         let currentTime = ref<string>("")

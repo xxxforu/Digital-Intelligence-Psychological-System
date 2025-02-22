@@ -1,34 +1,32 @@
 <template>
     <div class="collectiveDimensionBoard" :style="{ width: boxWidth + 'px', height: boxHeight + 'px' }">
-        <h3 class="boardTitle">{{ data.dimensionName }}</h3>
+        <h3 class="boardTitle">{{ data.dimension }}</h3>
         <div class="scroll-content">
             <div class="scroll-item">
                 <div class="progress">
-                    人数占比:{{ data.percent }}%<a-progress :percent="data.percent * 0.01" :style="{ width: '150px' }"
-                        :color="{
-                            '0%': 'rgb(227,35,255)',
-                            '100%': 'rgb(117,23,248)',
-                        }" trackColor="rgba(191,205,255,0.25)" showText="false" size="large" />
+                    人数占比:{{ data.rate }}%<a-progress :percent="data.rate * 0.01" :style="{ width: '150px' }" :color="{
+                        '0%': 'rgb(227,35,255)',
+                        '100%': 'rgb(117,23,248)',
+                    }" trackColor="rgba(191,205,255,0.25)" showText="false" size="large" />
                 </div>
 
                 <p class="title">【等级解释】</p>
-                <p class="content">{{ data.levelExplain }}</p>
+                <p class="content">{{ data.rankDesc }}</p>
                 <p class="title">【群体辅导建议】</p>
-                <p class="content">{{ data.suggestion }}</p>
+                <p class="content">{{ data.advice }}</p>
             </div>
             <div class="scroll-item">
                 <div class="progress">
-                    人数占比:{{ data.percent }}%<a-progress :percent="data.percent * 0.01" :style="{ width: '150px' }"
-                        :color="{
-                            '0%': 'rgb(227,35,255)',
-                            '100%': 'rgb(117,23,248)',
-                        }" trackColor="rgba(191,205,255,0.25)" showText="false" size="large" />
+                    人数占比:{{ data.rate }}%<a-progress :percent="data.rate * 0.01" :style="{ width: '150px' }" :color="{
+                        '0%': 'rgb(227,35,255)',
+                        '100%': 'rgb(117,23,248)',
+                    }" trackColor="rgba(191,205,255,0.25)" showText="false" size="large" />
                 </div>
 
                 <p class="title">【等级解释】</p>
-                <p class="content">{{ data.levelExplain }}</p>
+                <p class="content">{{ data.rankDesc }}</p>
                 <p class="title">【群体辅导建议】</p>
-                <p class="content">{{ data.suggestion }}</p>
+                <p class="content">{{ data.advice }}</p>
             </div>
         </div>
 
@@ -44,7 +42,6 @@ export default defineComponent({
         boxHeight: Number,
     },
     setup() {
-        components: { }
         return {}
     }
 })
@@ -100,6 +97,7 @@ export default defineComponent({
         line-height: 25px;
         letter-spacing: 0%;
         text-align: left;
+        white-space: pre-line;
     }
 
     .progress {
@@ -138,7 +136,7 @@ export default defineComponent({
     }
 }
 
-.scrollText:hover .scroll-content {
+.collectiveDimensionBoard:hover .scroll-content {
     animation-play-state: paused;
 }
 </style>

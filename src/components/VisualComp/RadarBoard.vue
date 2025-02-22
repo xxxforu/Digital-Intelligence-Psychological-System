@@ -98,13 +98,19 @@ export default defineComponent({
                                 value: props.data.value,
                                 areaStyle: {
                                     color: new echarts.graphic.RadialGradient(0.1, 0.6, 1, colorList[props.currentType])
+                                },
+                                label: {
+                                    show: true,
+                                    fontSize: props.isReport ? 14 : 16,
+                                    formatter: function (params) {
+                                        return params.value
+                                    }
                                 }
                             }
                         ]
                     }
                 ]
             };
-            console.log(props);
 
             if (props.isDouble === true) {
                 option.legend = {

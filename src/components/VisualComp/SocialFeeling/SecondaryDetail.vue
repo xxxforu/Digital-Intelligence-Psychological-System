@@ -7,7 +7,7 @@
                 <div class="level">{{ item.level }}</div>
                 <div class="percent">Level</div>
             </div>
-            <div class="describe">{{ item.describe }}</div>
+            <div class="describe">{{ item.overview }}</div>
         </div>
     </div>
 </template>
@@ -21,7 +21,6 @@ export default defineComponent({
         boxHeight: Number,
     },
     setup() {
-        components: { }
         return {}
     }
 })
@@ -43,7 +42,7 @@ export default defineComponent({
         align-items: center;
 
         .top {
-            width: 35%;
+            width: 40%;
             display: flex;
             justify-content: space-between;
             align-items: end;

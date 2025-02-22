@@ -122,6 +122,8 @@ export default defineComponent({
             },
         ]
         onMounted(() => {
+            console.log(props.data);
+
             const pieBoardChart = echarts.init(pieBoard.value)
             var option;
             option = {
@@ -130,7 +132,8 @@ export default defineComponent({
                     trigger: 'item',
                     textStyle: {
                         fontSize: 20,
-                    }
+                    },
+                    valueFormatter: (value: number | string, dataIndex: number) => value + '人'
                 },
                 legend: {
                     top: 'middle',
@@ -139,13 +142,14 @@ export default defineComponent({
                     textStyle: {
                         color: "#fff",
                         fontSize: 18
-                    }
+                    },
                 },
                 dataset: {
                     source: props.data
                 },
                 series: [
                     {
+                        name: '指标',
                         type: 'pie',
                         right: "20%",
                         radius: props.radius,
@@ -153,7 +157,7 @@ export default defineComponent({
                         label: {
                             show: props.label,
                             position: 'outside',
-                            formatter: '{b}: {d}',
+                            formatter: '{b}:{@[1]}人',
                             //{a}系列名，{b}数据名，{c}数据值，{d}百分比
                             color: '#fff',
                             fontSize: 16,

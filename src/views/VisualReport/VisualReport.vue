@@ -1,4 +1,9 @@
 <script lang="ts">
+import {
+    CollectiveVisualGET,
+    PersonalVisualGET,
+    psyTermGET,
+} from '@/api/teacherController';
 import DoubleColumn from '@/components/VisualComp/DoubleColumn.vue';
 import SignificantType from '@/components/VisualComp/Hollander/SignificantType.vue';
 import HorizontalColumn from '@/components/VisualComp/HorizontalColumn.vue';
@@ -11,6 +16,8 @@ import PieBoard from '@/components/VisualComp/SocialFeeling/PieBoard.vue';
 import SecondaryAbility from '@/components/VisualComp/SocialFeeling/SecondaryAbility.vue';
 import SecondaryDetail from '@/components/VisualComp/SocialFeeling/SecondaryDetail.vue';
 import TableBoard from '@/components/VisualComp/TableBoard.vue';
+import { useLoginUserStore } from '@/store/userStore';
+import { useVisualStore } from '@/store/visualStore';
 import useDraw from '@/utils/useDraw';
 import { BorderBox1 as DvBorderBox1 } from '@kjgl77/datav-vue3';
 import {
@@ -38,8 +45,8 @@ export default defineComponent({
     },
     computed: {
         title() {
-            if (this.state.isPersonal) {
-                switch (this.currentType) {
+            if (this.visualDetail.boardType) {
+                switch (this.state.currentType) {
                     case 0:
                         return '社会情感能力数据可视化大屏';
                     case 1:
@@ -54,7 +61,7 @@ export default defineComponent({
                         return '';
                 }
             }
-            switch (this.currentType) {
+            switch (this.state.currentType) {
                 case 0:
                     return '社会情感能力集体数据可视化大屏';
                 case 1:
@@ -70,106 +77,334 @@ export default defineComponent({
             }
         },
     },
-    // props: {
-    //     isPersonal: {
-    //         type: Boolean,
-    //         required: true,
-
-    //     }
-    // },
     setup() {
+        const loginUserStore = useLoginUserStore();
+        const loginUser = loginUserStore.loginUser
+
         const router = useRouter()
         const borderRef = ref<InstanceType<typeof DvBorderBox1>>()
         //加载标识
-        const loading = ref<boolean>(true)
+        const loadingState = ref({
+            pageLoading: true,
+            termLoading: true
+        })
+        type termType = {
+            value: string,
+            label: string
+        }
         // * 适配处理
         const { appRef, calcRate, windowDraw, unWindowDraw } = useDraw()
+        const visualDetailStore = useVisualStore()
+        const visualDetail = visualDetailStore.visualDetail
+        if (!visualDetail.uid && !visualDetail.classedIds?.length) router.go(-1);
+        const termList = ref<Array<termType>>([])
+        const getTermList = async () => {
+            try {
+                const res1 = await psyTermGET();
+                if (res1.data) {
+                    state.value.term = res1.data[0];
+
+                    loadingState.value.termLoading = false;
+                    res1.data.forEach(termItem => {
+                        // 提取年份和数字部分
+                        const year1 = termItem.substring(0, 4); // 提取前4个字符作为第一个年份
+                        const year2 = termItem.substring(4, 8).slice(0, 4); // 提取接下来的4个字符作为第二个年份（虽然这里只需要前4个，但substring已经确保了长度）
+                        const number = termItem.substring(8, 9) || termItem.slice(-1); // 提取最后1个字符作为数字（这里两种方法都可以，因为已知长度为7）
+
+                        // 拼接成所需格式
+                        const formattedString = `${year1}-${year2}-${number}`;
+                        termList.value.push({
+                            label: formattedString,
+                            value: termItem
+                        } as termType);
+                    });
+                }
+            } catch (error) {
+                console.error("Error fetching term list:", error);
+            }
+        };
         // 生命周期
-        onMounted(() => {
-            cancelLoading()
+        onMounted(async () => {
             // todo 屏幕适应
             windowDraw()
             calcRate()
             borderRef.value?.initWH()
+            await getTermList()
+            loadData()
         })
+        const data = ref({})
+        const loadData = () => {
+            loadingState.value.pageLoading = true
+
+            if (visualDetail.boardType) {
+                PersonalVisualGET({
+                    uid: visualDetail.uid,
+                    resultType: state.value.currentType,
+                    term: state.value.term,
+                    cnt: state.value.cnt || null
+                } as API.PersonalVisualProps).then(res => {
+                    loadingState.value.pageLoading = false
+                    if (state.value.currentType === 0) {
+                        data.value = (res.data as API.personalSFVisual) || null;
+
+                        if (res.data) {
+                            PSFTableBoard.value.data = (data.value as API.personalSFVisual).rankList;
+                            (data.value as API.personalSFVisual).totalScore = (data.value as API.personalSFVisual).totalScore.map(([label, score]) => [label, Number(score)]);
+                        }
+                    } else if (state.value.currentType === 1) {
+                        data.value = (res.data as API.personalMIVisual) || null;
+                        if (res.data) {
+
+                            MITableBoard.value.data = (data.value as API.personalMIVisual).rankList;
+                            (data.value as API.personalMIVisual).rankList = (data.value as API.personalMIVisual).rankList.map(([label, score]) => [label, Number(score)]);
+                            const scoreDistribute = (res.data as API.personalMIVisual).scoreDistribute;
+                            if (scoreDistribute) {
+                                const { list, scoreValues } = scoreDistribute;
+                                MIRadarBoard.value = {
+                                    value: scoreValues,
+                                    indicator: list,
+                                };
+                            }
+                            MIScrollText1.value = [];
+                            MIScrollText2.value = [];
+                            (data.value as API.personalMIVisual).intelligenceExplainAndRecommend.forEach(item => {
+                                MIScrollText1.value.push({
+                                    title: item.resultName + "智能",
+                                    content: item.resultDesc
+                                })
+                                item.majorRecommend.forEach(el => {
+                                    MIScrollText2.value.push({
+                                        title: el.majorCode + " " + el.majorMain,
+                                        content: el.majorDesc
+                                    })
+                                });
+                            })
+
+                        }
+                    } else if (state.value.currentType === 2) {
+                        data.value = (res.data as API.personalHLDVisual) || null;
+                        if (res.data) {
+
+                            (data.value as API.personalHLDVisual).score = (data.value as API.personalHLDVisual).score.map(([label, score]) => [label, Number(score)]);
+                            HLDRadarBoard.value.value = [];
+                            HLDRadarBoard.value.indicator = [];
+                            // 定义排序顺序
+                            const order = ['R', 'C', 'E', 'S', 'A', 'I'];
+
+                            // 按照指定顺序对 score 进行排序
+                            const sortedScore = (data.value as API.personalHLDVisual).score.sort((a, b) => {
+                                const aType: string = (a[0] as string)[0]; // 提取类型，如 "R-Realistic-技能型" 中的 "R"
+                                const bType: string = (b[0] as string)[0]; // 提取类型，如 "E-Enterprise-经营型" 中的 "E"
+                                return order.indexOf(aType) - order.indexOf(bType);
+                            });
+                            sortedScore.forEach(item => {
+                                HLDRadarBoard.value.value.push(parseInt(item[1] as string))
+                                HLDRadarBoard.value.indicator.push({
+                                    text: (item[0] as string),
+                                    max: 8,
+                                })
+                            })
+                        }
+                    }
+                    else if (state.value.currentType === 3) {
+                        data.value = (res.data as API.personalMHTVisual) || null;
+                        if (res.data) {
+                            MHTTableBoard.value.data = [];
+                            MHTScrollText1.value = [];
+                            MHTScrollText2.value = [];
+                            (res.data as API.personalMHTVisual).score.forEach(item => {
+                                MHTTableBoard.value.data.push([item[0] as string, item[1] as string])
+
+                                MHTScrollText1.value.push()
+                            });
+                            (res.data as API.personalMHTVisual).explain.forEach(item => {
+                                MHTScrollText1.value.push({
+                                    title: item.resultName,
+                                    content: item.resultDesc
+                                })
+                                MHTScrollText2.value.push({
+                                    title: item.resultName,
+                                    content: item.advice
+                                })
+                            })
+                        }
+                    } else if (state.value.currentType === 4) {
+                        data.value = (res.data as API.personalWarnVisual) || null;
+                        if (res.data) {
+                            EWTableBoard1.value.data = (res.data as API.personalWarnVisual).vulnerablePositionExplain;
+                            EWTableBoard2.value.data = (res.data as API.personalWarnVisual).heartPainExplain
+                            EWTableBoard3.value.data = (res.data as API.personalWarnVisual).suicideExplain
+                            EWTableBoard4.value.data = (res.data as API.personalWarnVisual).vulnerableTraitExplain
+
+                            EWRadarBoard1.value = {
+                                value: (res.data as API.personalWarnVisual).vulnerablePosition.score,
+                                indicator: (res.data as API.personalWarnVisual).vulnerablePosition.indicator,
+                            };
+                            EWRadarBoard2.value = {
+                                value: (res.data as API.personalWarnVisual).heartPain.score,
+                                indicator: (res.data as API.personalWarnVisual).heartPain.indicator,
+                            };
+                            EWRadarBoard4.value = {
+                                value: (res.data as API.personalWarnVisual).vulnerableTrait.score,
+                                indicator: (res.data as API.personalWarnVisual).vulnerableTrait.indicator,
+                            };
+                        }
+                    }
+                    else data.value = res.data
+                })
+            }
+            else {
+                CollectiveVisualGET({
+                    classesIds: visualDetail.classedIds,
+                    resultType: state.value.currentType,
+                    term: state.value.term,
+                    cnt: state.value.cnt || null
+                } as API.CollectiveVisualProps).then(res => {
+                    loadingState.value.pageLoading = false
+
+                    if (state.value.currentType === 0) {
+                        data.value = (res.data as API.collectiveSFVisual) || null;
+                        if (res.data) {
+                            (data.value as API.collectiveSFVisual).pieAndBarList.barList = ((data.value as API.collectiveSFVisual).pieAndBarList as API.pieAndBarListProps).barList.map(([label, score]) => [label, Number(score)]);
+                            // (data.value as API.collectiveSFVisual).pieAndBarList.pieList = [];
+                            (res.data as API.collectiveSFVisual).list.forEach(item => {
+                                let content = item.describe[0].content
+                                item.describe[0].content = item.describe[0].overview + '\n' + content;
+                                // (data.value as API.collectiveSFVisual).pieAndBarList.pieList.push({
+                                //     name: item.levelName,
+                                //     value: item.percent
+                                // })
+                            })
+                        }
+
+                    } else if (state.value.currentType === 1) {
+                        //把数据解析出来
+                        data.value = (res.data as API.collectiveMIVisual)?.data || null
+                        if (res.data) {
+                            let TableBoard: Array<Array<string>> = (res.data as API.collectiveMIVisual).data
+                            CMITableBoard.value.data = []
+                            CMIPieDataList.value = []
+                            CMIDoubleColumn.value = []
+                            TableBoard.forEach(item => {
+                                CMITableBoard.value.data.push([item[0] + '智能', item[1] + '人', item[2] + '人', item[3] + '%'])
+                                CMIPieDataList.value.push([item[0] + '智能', parseInt(item[1]), parseInt(item[3])])
+                                CMIDoubleColumn.value.push([item[0] + '智能', parseInt(item[1])])
+                            })
+                        }
+                    }
+                    else if (state.value.currentType === 2) {
+                        data.value = (res.data as API.collectiveHLDVisual) || null
+                        if (res.data) {
+                            let TableBoard: Array<Array<string | number>> = (res.data as API.collectiveHLDVisual).rank
+                            CHLDTableBoard.value.data = []
+                            CHLDPieDataList.value = []
+
+                            const { values, indicator } = (data.value as API.collectiveHLDVisual).distribute
+                            // 定义排序顺序
+                            const order = ['R', 'C', 'E', 'S', 'A', 'I'];
+
+                            // 将 list 和 scoreValues 组合成一个数组，方便排序
+                            const combined = indicator.map((item: { text: string, max: number }, index: number) => ({
+                                text: item.text,
+                                max: item.max,
+                                score: values[index],
+                            }));
+
+                            // 按照指定顺序对 combined 进行排序
+                            const sortedCombined = combined.sort((a: { text: string, max: number }, b: { text: string, max: number }) => {
+                                const aType = a.text[0]; // 提取类型，如 "R-Realistic-技能型" 中的 "R"
+                                const bType = b.text[0]; // 提取类型，如 "E-Enterprise-经营型" 中的 "E"
+                                return order.indexOf(aType) - order.indexOf(bType);
+                            });
+
+                            // 分离排序后的 list 和 scoreValues
+                            const sortedList = sortedCombined.map((item: { text: string, max: number }) => ({
+                                text: item.text,
+                                max: item.max,
+                            }));
+                            const sortedScoreValues = sortedCombined.map((item: { text: string, max: number, score: number }) => item.score);
+                            CHLDRadarBoard.value.value = sortedScoreValues;
+                            CHLDRadarBoard.value.indicator = sortedList;
+
+                            TableBoard.forEach(item => {
+                                CHLDTableBoard.value.data.push([item[0] as string, item[1] + '人', item[2] + '人', item[3] + '%'])
+                                CHLDPieDataList.value.push([item[0], item[1], item[3]])
+
+                            })
+                        }
+
+                    } else if (state.value.currentType === 3) {
+                        data.value = (res.data as API.collectiveMHTVisual)?.list || null
+                    } else if (state.value.currentType === 4) {
+                        data.value = (res.data as API.collectiveWarnVisual)?.list || null
+                        if (res.data) {
+                            const dataArray: Array<API.collectiveWarnVisualItem> = (res.data as API.collectiveWarnVisual).list
+                            CEWTableBoard1.value.data = []
+                            CEWTableBoard5.value.data = []
+                            CEWTableBoard2.value.data = []
+                            CEWTableBoard3.value.data = []
+                            dataArray.forEach((item, index) => {
+                                switch (index) {
+                                    case 0: //易损处境
+                                        item.analysis.list.forEach((el: Array<string>) => {
+                                            CEWTableBoard1.value.data.push([el[0], el[1], el[2] + '%'])
+                                        });
+                                        break;
+                                    case 1: //易损特质
+                                        item.analysis.list.forEach((el: Array<string>) => {
+                                            CEWTableBoard5.value.data.push([el[0], el[1], el[2] + '%'])
+                                        });
+                                        break;
+                                    case 2: //心理痛苦
+                                        item.analysis.list.forEach((el: Array<string>) => {
+                                            CEWTableBoard2.value.data.push([el[0], el[1], el[2] + '%'])
+                                        });
+                                        break;
+                                    case 3: //自杀意念
+                                        item.analysis.list.forEach((el: Array<string>) => {
+                                            CEWTableBoard3.value.data.push([el[0], el[1], el[2] + '%'])
+                                        });
+                                        break;
+
+                                }
+
+                            })
+                        }
+
+                    } else data.value = res.data
+                })
+            }
+        }
 
         onUnmounted(() => {
             unWindowDraw()
         })
 
-        // methods
-        // todo 处理 loading 展示
-        const cancelLoading = () => {
-            setTimeout(() => {
-                loading.value = false
-            }, 500)
-        }
-
-
         var state = ref({
-            term: "current",
-            report: "latest",
-            className: "701班小红",
-            isPersonal: true
+            term: "",
+            currentType: 0,
+            cnt: 0
         })
-        var currentType = ref(0)
 
 
         const testSelectChange = (val: string | number) => {
-            currentType.value = Number(val); // 强制转换为数值型
-            console.log("val:", val, "currentType:", currentType.value);
+            state.value.currentType = Number(val); // 强制转换为数值型\
+            loadData()
         };
         const goToLastPage = () => {
-            currentType.value = currentType.value - 1
-            console.log("goToLastPage");
+            state.value.currentType = state.value.currentType - 1
+            loadData()
 
         }
         const goToNextPage = () => {
-            currentType.value = currentType.value + 1
+            state.value.currentType = state.value.currentType + 1
+            loadData()
         }
         // 要传给组件的数据
+
         // personSocialFeeling
-        const PSFScrollText1 = ref([
-            {
-                title: "任务能力",
-                content: "你展现了出色的任务能力。你能够明确目标并制定详细的计划，同时以极高的标准和严谨的态度努力实现目标。你具备强烈的责任感，对任务的完成负责到底，并且能够自觉地承担起自己的职责。你拥有坚定的意志和坚定的信心，能够在面对困难和动摇时保持冷静和乐观，并找到克服困难的方法和策略。你的出色任务能力为团队的成功做出了重要的贡献。"
-            },
-            {
-                title: "情绪能力",
-                content: "你展现了出色的情绪能力。你能够有效地调节自己的情绪，保持稳定和积极的状态。无论遇到多大的压力和挑战，你都能以乐观和冷静的态度应对。你具备较强的抗压力，能够在压力下保持良好的心理状态，并找到解决问题的方法。你拥有很高的自我控制能力，在面对困难时能够保持冷静和理智的思考。你的情绪稳定性和积极的心态为周围的人带来了正能量，并在团队中起到了积极的影响。"
-            },
-            {
-                title: "关爱能力",
-                content: "你展现出了成熟的关爱能力。你敢于去爱，有勇气表达自己的爱意，并能够真诚而大方地接受他人的爱。你具备高度的共情力，能够深入了解他人的感受和需求，并通过实际行动表达你对他们的关心和支持。你建立了稳固的信任感，与他人建立了深厚的情感纽带，并且经常表达对他们的感激之情。"
-            }, {
-                title: "开放能力",
-                content: "你具备较高水平的开放能力。你有包容的心态，能够尊重和理解不同的观点和文化。你保持谦恭的心态，愿意倾听他人的意见和建议。你有较强的创造力和开放思维，能够适应不断变化的环境，并灵活应对新的挑战。你积极参与文化交流，接受并善于融合不同的全球文化。"
-            },
-            {
-                title: "领导能力",
-                content: "你具备较高水平的领导能力。你能够有效地调动资源，协调团队成员的工作并推动目标的实现。你具备一定的规划能力，能够制定明确的目标和行动计划。你在决策方面表现出一定的果断和明智，并愿意对决策结果负责。你的领导能力对于团队的成功起到了积极的推动作用。"
-            },
-            {
-                title: "学习能力",
-                content: "你具备一定水平的学习能力。你在观察力方面有所进步，能够较好地捕捉问题的关键点和重要信息。你能够一定程度上保持专注力，在学习过程中能够较为集中地进行学习。你的记忆力有待提高，可能需要更多的技巧和方法来帮助记忆学习的内容。你具备中等水平的学习能力，可以适应各种学习任务的需求。"
-            },
-        ])
-        const PSFScrollText2 = ref([
-            {
-                title: "共情力",
-                content: "你展现了高度的共情力。你能够真正设身处地地关怀他人的福祉，并表现出无私的付出和乐于助人的品质。你心地善良，充满爱心，总是愿意伸出援手帮助那些需要帮助的人。你对他人的困境和痛苦能够深入感同身受，你的关怀和支持总能给他们带来温暖与力量。你以他人的需要为重，努力为他人创造更美好的生活环境，成为他们的守护者和支持者。"
-            },
-            {
-                title: "信任感",
-                content: "你展现了高水平的信任感。你对他人普遍怀有善意的信念，愿意相信人性中的美好。你敞开心扉与他人交往，积极建立和发展友谊。你乐于去信任他人，坦诚相待，从而赢得了他人的信赖和友谊。你以真诚和宽容的态度对待他人，对待生活中的各种关系，展现出卓越的信任感和社交能力。"
-            },
-            {
-                title: "感恩力",
-                content: "你具备较高水平的感恩力。你经常意识到自己的幸运和受到的恩惠，从而自发地感到富足和感激。你懂得欣赏生活中的美好和感人之处，享受其中的喜悦和感动。你善于发现身边的一切可贵之处，对他人的善意和关爱表示感激。你以感恩的态度度过每一天，用心感受并回报所受到的恩情。"
-            }
-        ])
         const PSFTableBoard = ref({
-            header: ['一级指标得分排名', '社会情感等级分布'],
+            header: ['一级指标名称', '一级指标等级'],
             data: [
                 ['任务能力', 'A-高',],
                 ['情绪能力', 'A-高',],
@@ -187,17 +422,9 @@ export default defineComponent({
             // columnWidth: [50],
             align: ['center']
         })
-        const PSFHorizontalColumn = ref([
-            ['情绪能力', '88'],
-            ['领导能力', '70'],
-            ['关爱能力', '95'],
-            ['任务能力', '92'],
-            ['开放能力', '74'],
-            ['学习能力', '55']
-        ])
         // mutipleIntelligence
         const MITableBoard = ref({
-            header: ['智能类型', '多元智能等级分级'],
+            header: ['智能类型', '得分', '智能等级'],
             data: [
                 ['语言言语智能', '5分/稍有优势',],
                 ['数据逻辑智能', '3分一般',],
@@ -218,16 +445,7 @@ export default defineComponent({
             // columnWidth: [50],
             align: ['center']
         })
-        const MIHorizontalColumn = ref([
-            ['语言言语智能', '5'],
-            ['数据逻辑智能', '3'],
-            ['视觉空间智能', '9'],
-            ['音乐旋律智能', '7'],
-            ['身体运动智能', '6'],
-            ['人际关系智能', '8'],
-            ['自我认知智能', '7'],
-            ['自然观察智能', '8']
-        ])
+
         const MIRadarBoard = ref({
             value: [5, 3, 9, 7, 6, 8, 7, 8],
             indicator: [
@@ -299,56 +517,21 @@ export default defineComponent({
             },
         ])
         //hollander
-        const HLDHorizontalColumn = ref([
-            ['R-Realistic-技能型', 8],
-            ['I-Investigative-研究型', 7],
-            ['A-Artistic-艺术型', 9],
-            ['S-Social-社会型', 6],
-            ['E-Enterprise-经营型', 3],
-            ['C-Conventional-常规型', 6],
-        ])
+
         const HLDRadarBoard = ref({
             value: [8, 7, 9, 6, 3, 6],
             indicator: [
-                { text: 'R-Realistic-技能型' },
-                { text: 'I-Investigative-研究型' },
-                { text: 'A-Artistic-艺术型' },
-                { text: 'S-Social-社会型' },
-                { text: 'E-Enterprise-经营型' },
-                { text: 'C-Conventional-常规型' },
+                { text: 'R-Realistic-技能型', max: 10 },
+                { text: 'I-Investigative-研究型', max: 10 },
+                { text: 'A-Artistic-艺术型', max: 10 },
+                { text: 'S-Social-社会型', max: 10 },
+                { text: 'E-Enterprise-经营型', max: 10 },
+                { text: 'C-Conventional-常规型', max: 10 },
             ],
         })
-        const HLDSignificantTypeList = ref([
-            { type0: "R", type1: "技能型", type2: "Realistic" },
-            { type0: "I", type1: "研究型", type2: "Investment" },
-            { type0: "R", type1: "艺术型", type2: "Artistic" },
-        ])
-        const HLDScrollText = ref([
-            {
-                type: "R-Realistic-技能型",
-                characters: "坦率、正直、诚实、谦逊。",
-                explain: "技能型的人是注重实际的。他们通常具备机械操作能力或一定的体力，适合与机械、工具、动植物等具体事物打交道，他们具有实干家的精神。这种人不善于社交活动，缺少对环境、他人的洞察力，感情也不是特别丰富，他们的注意力往往集中在物质的、实际的某一方面。他们喜欢安定，踏实稳重，遵守规则，善于进行某一专业领域内的研究。在职业选择上，他们希望从事有明确要求、需要一定技巧、按一定程序进行操作的工作，因此适合在技术领域的相关产业工作，如IT、电子通讯、信息技术等行业。",
-                examples: "喜欢修理各种家用电器、设备等；喜欢上实验课、劳技课等，因为可以操作实验设备、仪器；喜欢玩各种组装、拼装类玩具；喜欢打理花草、制作家具、缝制衣物、烹饪；喜欢户外运动、体育活动等。",
-                preferredWork: "电子信息科学与技术、光信息科学与技术、微电子学、信息安全、通信工程、电子信息工程、计算机科学与技术、软件开发、测控技术与仪器、电气工程及其自动化、数字媒体技术、材料学、材料物理、高分子材料与工程、飞行器设计与工程、飞行技术、武器系统与发射工程、机械设计及其自动化、车辆工程、给水排水工程、测绘工程、农业机械化及其自动化等专业。"
-            },
-            {
-                type: "I-Investigative-研究型",
-                characters: "谨慎、严格、严肃、内向、谦虚、独立性强。",
-                explain: "研究型的人是思想家而非实干家，抽象思维能力强。研究型的人对周围的环境不太敏感，与技能型不同的是，他们的洞察力很强，他们勤学好问、思维缜密，善于怀着强烈的好奇心观察分析、逻辑推理探究事物的本源。他们通常喜欢做统计分析，具备从事调查、观察、评价、推理等方面活动的能力。他们能够全神贯注于长期性地思索当中寻根问底，他们能够置身困惑当中思索头绪，他们能够在逆境中成就自己，任何能够给他们带来挑战的事物都能引起他们的兴趣。然而，这类人往往无法忍受繁文缛节、例行公事，因此，他们需要有科学分析创造性和成就感的工作。",
-                examples: "脑袋里常常有各种各样的“为什么”；与各类娱乐杂志相比，更喜欢翻阅科学、哲学等知识类书籍、材料；喜欢参加在脑力上更有挑战的活动和游戏，如下棋、推理游戏；平时可能话不多，但不人云亦云。",
-                preferredWork: "数学与应用数学、数理基础科学、物理学、应用物理学、化学、生物科学、地质学、冶金工程、微电子制造工程、临床医学、麻醉学、医学影像学、医学检验、海洋科学、心理学、生物工程、武器系统与发射工程、弹药工程与爆炸技术、特种能源工程与烟火技术、船舶与海洋工程、港口航道与海岸工程、交通运输、飞行技术、航海技术、轮机工程、物流工程、油气储运工程、车辆工程、地质学、地理信息系统等专业。"
-            },
-            {
-                type: "A-Artistic-艺术型",
-                characters: "浪漫、敏感、感性、情绪充沛、富有想象力。",
-                explain: "艺术型的人有创造力，乐于创造新颖、与众不同的成果，渴望表现自己的个性，实现自身的价值。做事理想化，追求完美，不重实际。艺术离不开天马行空的丰富想象力，艺术型的人往往自由奔放，不愿被约束，他们有理想、易冲动、有独创性，喜欢在非系统化活动中发挥自己的主观能动性，渴望在自由宽松的环境中实现自我，追求生活环境与个性的完美融合。同时，这种自由的性格也就决定了他们无法埋头钻研，进行思维缜密、逻辑顺畅的科学研究，他们无法忍受机械化的生活方式。因此，他们更适合于能够发挥主观想象力，没有固定规律、模式约束的工作类型。艺术型的人通常内心活动比较复杂、敏感、善于表达且富有想象力，他们不喜欢结构性强的活动，但他们情绪充沛，情感充盈，适合于从事艺术创作。",
-                examples: "喜欢欣赏各种形式的艺术作品；乐意参加文艺演出；没事写写自娱自乐的小文章、拍拍各类照片、听听音乐会（并非单纯的追星）、看看画展等。",
-                preferredWork: "艺术类专业、旅游管理、汉语言文学、新闻学、广播电视新闻学、广告学、编辑出版学、传播学、媒体创意、音乐学、绘画、摄影、英语及小语种等专业。除此之外，可考虑选择历史学、食品科学与工程、轻化工程、包装工程、印刷工程、纺织工程、服装设计与工程、园艺、植物保护、茶学、环境科学、生态学等专业。"
-            },
-        ])
         //MHT
         const MHTTableBoard = ref({
-            header: ['MHT类型', '分数/等级'],
+            header: ['MHT类型', '分数'],
             data: [
                 ['对人焦虑', '9分/较高',],
                 ['学习焦虑', '8分/较高',],
@@ -368,17 +551,7 @@ export default defineComponent({
             index: true,
             align: ['center']
         })
-        const MHTHorizontalColumn = ref([
-            ['对人焦虑', 9,],
-            ['学习焦虑', 8,],
-            ['孤独倾向', 7,],
-            ['自责倾向', 6,],
-            ['过敏倾向', 5,],
-            ['身体症状', 4,],
-            ['恐怖症状', 3,],
-            ['冲动倾向', 2,],
-            ['效度量表(测谎)', 1,]
-        ])
+
         const MHTScrollText1 = ref([
             {
                 title: "对人焦虑",
@@ -459,7 +632,7 @@ export default defineComponent({
         ])
         //earlyWarnig
         const EWTableBoard1 = ref({
-            header: ['维度名称', '类型', '严重程度'],
+            header: ['维度名称', '类型', '严重程度(%)'],
             data: [
                 ['家庭亲密度低', '阳性', "80%"],
                 ['家庭冲突', '阳性', "70%"],
@@ -471,7 +644,6 @@ export default defineComponent({
             headerBGC: 'linear-gradient(rgba(116, 194, 255, 0.4), rgba(7, 125, 255, 0.4))',
             oddRowBGC: '#0f1325', //奇数行
             evenRowBGC: '#171c33', //偶数行
-            index: true,
             align: ['center']
         })
         const EWRadarBoard1 = ref({
@@ -485,7 +657,7 @@ export default defineComponent({
             ],
         })
         const EWTableBoard2 = ref({
-            header: ['维度名称', '类型', '严重程度'],
+            header: ['维度名称', '类型', '严重程度(%)'],
             data: [
                 ['抑郁', '阳性', "80%"],
                 ['焦虑', '阳性', "70%"],
@@ -497,7 +669,6 @@ export default defineComponent({
             headerBGC: 'linear-gradient(rgba(116, 194, 255, 0.4), rgba(7, 125, 255, 0.4))',
             oddRowBGC: '#0f1325', //奇数行
             evenRowBGC: '#171c33', //偶数行
-            index: true,
             align: ['center']
         })
         const EWRadarBoard2 = ref({
@@ -511,7 +682,7 @@ export default defineComponent({
             ],
         })
         const EWTableBoard3 = ref({
-            header: ['维度名称', '类型', '严重程度'],
+            header: ['维度名称', '类型', '严重程度(%)'],
             data: [
                 ['自杀程度', '阴性', "15%"],
             ],
@@ -519,11 +690,10 @@ export default defineComponent({
             headerBGC: 'linear-gradient(rgba(116, 194, 255, 0.4), rgba(7, 125, 255, 0.4))',
             oddRowBGC: '#0f1325', //奇数行
             evenRowBGC: '#171c33', //偶数行
-            index: true,
             align: ['center']
         })
         const EWTableBoard4 = ref({
-            header: ['维度名称', '类型', '严重程度'],
+            header: ['维度名称', '类型', '严重程度(%)'],
             data: [
                 ['社会决定完美主义', '阳性', "80%"],
                 ['状态性冲动', '阳性', "70%"],
@@ -551,47 +721,7 @@ export default defineComponent({
             ],
         })
 
-        // 集体C
-        //personSocialFeeling
-        const CPSFLevel = ref({
-            levelName: "关爱能力",
-            level: "A",
-            percent: 57,
-            describe: [
-                {
-                    title: "概述",
-                    content: "关爱能力概况描述：内容：学生在班级和社交活动中表现出积极的态度，愿意主动关心和帮助他人。他们在面对需要帮助的人时能够伸出援手，展现出同情心和爱心    勇于表达爱描述：学生在表达爱意方面表现优秀，能够自然地表达对他人的关心和爱意。内容：学生能够根据不同情境和对象选择合适的表达方式，包括言语和行动上的表达。他们在公共场合和私人场合都能够自信地表达爱意，建立起健康的人际关系    不怯于接受爱描述：大多数学生能够坦然接受他人的爱和关怀，并能够给予积极的反馈。内容：学生能够感受到他人的温暖和关怀，并能够建立起健康的人际关系。他们认识到接受爱的重要性，并能够在日常生活中实践和体现这种能力。"
-                }
-            ],
-            secondLevel: [
-                {
-                    levelName: "共情力",
-                    percent: 61,
-                    level: "A",
-                    describe: "共情力是指个体设身处地对他人的福祉进行考量和关怀，并愿意主动给予他人帮助的品质。高共情力者心地善良、有爱心、乐于助人、不自私、不冷漠。"
-                },
-                {
-                    levelName: "信任感",
-                    percent: 51,
-                    level: "A",
-                    describe: "信任感是指一个人愿意相信其他人普遍都是怀有善意的心态。高信任感的人更乐意打开心扉与他人交往，也因而更容易收获友谊。"
-                },
-                {
-                    levelName: "感恩力",
-                    percent: 71,
-                    level: "A",
-                    describe: "感恩力是指人能够经常性地意识到自己被给予、被恩赐、被爱、是幸运的从而感到富足并自发性地产生感激情感的努力。高感恩力个体知足、常乐，因为他们善于发现生活中的感动并能享受这一感动。"
-                },
-            ]
-        })
-        const CPSFPie = ref([
-            { value: 55, name: '学习能力' },
-            { value: 74, name: '开放能力' },
-            { value: 92, name: '任务能力' },
-            { value: 95, name: '关爱能力' },
-            { value: 70, name: '领导能力' },
-            { value: 80, name: '情绪能力' }
-        ])
+        // 集体
         // mutipleIntelligence
         const CMITableBoard = ref({
             header: ['智能类型', '有优势', '其他', '有优势人数占比'],
@@ -672,57 +802,7 @@ export default defineComponent({
                 { text: 'C-Conventional-常规型' },
             ],
         })
-        //MHT
-        const CMHTBoardList = ref([
-            {
-                dimensionName: "对人焦虑解释与建议",
-                percent: 55,
-                levelExplain: "本次评估结果显示，有较高比例的学生在对人焦虑方面处于中等水平。这意味着大部分学生在人际交往中能够保持相对正常的状态，但仍有部分学生可能会在某些社交场合或特定情境下感到一定的焦虑和不适应。这种情况提示我们，需要关注学生在不同人际交往环境下的适应能力和心理状态。",
-                suggestion: "1.强化社交适应能力培养：通过开展多样化的社交实践活动，如模拟社交场景、角色扮演、团队合作项目等，让学生在实际操作中提升社交适应能力，学会在不同情境下灵活应对和调整自己的行为。\n2.增加同伴互助与支持：鼓励学生之间建立互助小组或学习小组，分享彼此在人际交往中的经验和困惑，相互支持和鼓励。同伴之间的交流和理解有助于缓解焦虑情绪，增强学生的归属感和安全感。\n3.提供心理教育与指导：开展心理健康教育课程或讲座，普及人际交往焦虑的相关知识，让学生了解焦虑的成因、表现及应对方法。同时，为有需要的学生提供心理咨询服务，帮助他们更好地应对人际交往中的焦虑问题。"
-            },
-            {
-                dimensionName: "学习焦虑解释与建议",
-                percent: 73,
-                levelExplain: "在本次学习焦虑评估中，有70%及以上的学生表现出较低的学习焦虑水平。这表明大多数学生能够以较为平和的心态面对学习任务和考试，不会受到过度的焦虑情绪困扰，能够正确对待学业成绩。这种情况为学校营造了一个积极向上的学习氛围，有利于学生的学业发展和心理健康。然而，仍需关注那些表现出较高学习焦虑的学生，确保他们也能得到有效的支持和帮助。",
-                suggestion: "1.继续营造良好的学习环境：保持并进一步优化学校的教学环境和学习氛围，为学生提供一个安静、舒适、充满活力的学习空间。鼓励教师采用多样化的教学方法和手段，激发学生的学习兴趣和积极性，让学生在轻松愉悦的环境中学习。\n2.鼓励学生自主学习：引导学生树立自主学习的意识，培养良好的学习习惯和自我管理能力。鼓励学生根据自己的兴趣和目标，制定合理的学习计划，主动探索和学习，提高学习的主动性和自觉性，从而进一步降低学习焦虑。\n3.关注少数焦虑学生：虽然大部分学生的学习焦虑水平较低，但仍需关注那些表现出较高焦虑的学生。为他们提供个性化的辅导和支持，如一对一的学习指导、心理咨询服务等，帮助他们分析焦虑的原因，制定应对策略，逐步克服学习焦虑，融入集体学习生活。\n4.加强生涯规划教育：开展生涯规划教育课程或活动，帮助学生了解自己的兴趣、特长和发展方向，明确学习目标和职业规划。让学生认识到学习不仅仅是为了应对考试，而是为了实现个人的成长和发展，从而以更加积极的态度面对学习，减少因目标不明确而产生的焦虑。"
-            },
-            {
-                dimensionName: "孤独倾向解释与建议",
-                percent: 45,
-                levelExplain: "本次评估结果显示，有40%-60%的学生在孤独倾向方面处于中等水平。这意味着大多数学生在人际交往中能够保持相对正常的状态，但仍有部分学生可能会在某些社交场合或特定情境下感到一定的孤独和不适应。这种情况可能源于学生对社交环境的适应能力、自我认知以及社交需求等因素的差异。虽然中等水平的孤独倾向在一定程度上是正常的，但若不加以引导和关注，也可能逐渐影响学生的社交发展和心理健康。",
-                suggestion: "1.提供多样化的社交平台：学校应为学生提供多样化的社交平台和活动，如兴趣小组、社团组织、志愿者活动等，让学生能够根据自己的兴趣和特长选择适合自己的社交方式。通过参与这些活动，学生可以结识志同道合的朋友，满足社交需求，减少孤独感。\n2.加强自我认知教育：开展自我认知教育课程或活动，帮助学生了解自己的性格特点、优势和不足。通过自我认知，学生可以更好地理解自己的孤独倾向，明确自己的社交需求和期望，从而更有针对性地提升社交技能和建立良好的人际关系。\n3.鼓励主动交往：鼓励学生在社交活动中主动与他人交往，如主动发起话题、参与小组讨论、邀请他人参加活动等。教师和家长也可以为学生创造更多的社交机会，如组织家庭聚会、社区活动等，让学生在实践中锻炼社交能力，增强与他人建立联系的信心。\n4.关注少数高孤独倾向学生：虽然大部分学生的孤独倾向处于中等水平，但仍需关注那些表现出较高孤独倾向的学生。为他们提供个性化的辅导和支持，如一对一的心理咨询、社交技能训练等，帮助他们克服孤独感，融入集体生活。"
-            },
-            {
-                dimensionName: "自责倾向解释与建议",
-                percent: 40,
-                levelExplain: "本次评估结果显示，有40%-60%的学生在自责倾向方面处于中等水平。这意味着大多数学生在面对挫折或犯错时，能够有一定的自责意识，但自责程度相对适中，不会过度自责。这种情况表明学生具有一定的自我反思和自我约束能力，能够认识到自己的责任，但同时也意识到外部因素的影响。然而，若不加以引导和关注，部分学生可能会逐渐发展为高自责倾向，影响心理健康和个人发展。",
-                suggestion: "1.加强自我反思教育：引导学生进行积极的自我反思，帮助他们分析自己在事情中的责任和可以改进的地方，同时也要看到自己的努力和进步。通过自我反思，学生可以更好地认识自己，明确自己的发展方向，避免陷入过度自责的困境。\n2.开展情绪管理课程：教授学生情绪管理的方法和技巧，如情绪识别、情绪表达、情绪调节等。当学生在面对挫折或犯错时，能够有效管理自己的情绪，避免因情绪失控而产生过度自责。\n3.建立同伴支持小组：鼓励学生之间建立同伴支持小组，分享彼此的经历和感受，相互安慰和支持。同伴之间的理解和支持有助于学生缓解自责情绪，增强面对困难的勇气和信心。\n4.关注少数高自责倾向学生：虽然大部分学生的自责倾向处于中等水平，但仍需关注那些表现出较高自责倾向的学生。为他们提供个性化的辅导和支持，如一对一的心理咨询、情绪管理训练等，帮助他们克服自责倾向，促进心理健康和个人成长。"
-            },
-            {
-                dimensionName: "过敏倾向解释与建议",
-                percent: 47,
-                levelExplain: "本次评估结果显示，有40%-60%的学生在过敏倾向方面处于中等水平。这意味着大多数学生在面对外界刺激或变化时，会有一定程度的敏感反应，但这种反应相对适中，不会过度影响他们的日常生活和学习。这种情况可能源于学生对环境的适应能力、心理承受能力以及个性特点等因素的差异。虽然中等水平的过敏倾向在一定程度上是正常的，但若不加以引导和关注，也可能逐渐影响学生的心理健康和人际交往。",
-                suggestion: "1.提供情绪管理指导：为学生提供情绪管理的指导和建议，帮助他们学会在面对外界刺激时如何有效地管理自己的情绪。可以通过开展情绪管理工作坊、讲座等活动，教授学生情绪调节的方法和技巧。\n2.增强环境适应能力：鼓励学生积极参与各种活动和挑战，以增强他们对环境变化的适应能力。通过参与不同的活动，学生可以逐渐适应各种环境和情境，减少过敏反应。\n3.开展同伴互助活动：组织同伴互助活动，让学生在同伴之间分享自己的感受和经验，相互支持和鼓励。同伴之间的理解和帮助有助于学生缓解过敏情绪，增强面对外界刺激的信心和能力。\n4.关注少数高过敏倾向学生：虽然大部分学生的过敏倾向处于中等水平，但仍需关注那些表现出较高过敏倾向的学生。为他们提供个性化的辅导和支持，如心理咨询服务、情绪管理训练等，帮助他们克服过敏倾向，促进心理健康。"
-            },
-            {
-                dimensionName: "身体症状解释与建议",
-                percent: 85,
-                levelExplain: "在本次身体症状评估中，有70%及以上的学生表现出较低的身体症状。这表明大多数学生在身体健康方面状况良好，能够较好地应对学习和生活中的各种挑战，保持较为稳定的身体健康状态。这种情况为学生的学业发展和个人成长提供了良好的基础，也反映了学校在健康教育和环境营造方面的积极成效。然而，仍需关注那些表现出较多身体症状的学生，确保他们也能得到及时的支持和帮助。",
-                suggestion: "1.持续优化健康教育：虽然大部分学生的身体症状较少，但仍需持续开展健康教育，不断更新和完善健康教育内容，以适应学生身心发展的需求。同时，鼓励学生主动参与健康教育活动，提高他们的健康意识和自我保健能力。\n2.加强个体关注与支持：对于少数表现出较多身体症状的学生，给予个性化的关注和支持。了解他们的具体情况和需求，提供针对性的健康指导和心理辅导，帮助他们改善身体状况，提高生活质量。\n3.促进健康校园文化建设：进一步加强健康校园文化建设，营造一个积极向上、关注健康的校园氛围。通过开展健康主题的文化活动、健康知识竞赛等，激发学生对健康的关注和追求，促进全校师生的身心健康。\n4.鼓励学生自我监测与管理：引导学生学会自我监测身体健康状况，如定期测量体温、血压等，并进行自我管理。鼓励学生在发现身体不适时及时就医，并采取合理的调理措施，保持良好的身体健康状态。"
-            },
-            {
-                dimensionName: "恐怖倾向解释与建议",
-                percent: 93,
-                levelExplain: "在本次恐怖倾向评估中，有70%及以上的学生表现出较低的恐怖倾向。这表明大多数学生在面对特定情境或事物时，能够保持较为稳定和冷静的心态，不会产生过度的恐惧和焦虑反应。这种情况有利于学生的心理健康和适应能力，使他们能够更好地面对生活中的挑战和压力。然而，仍需关注那些表现出较高恐怖倾向的学生，确保他们也能得到有效的支持和帮助。",
-                suggestion: "1.继续营造积极向上的校园氛围：保持并进一步优化学校的校园文化，鼓励学生积极面对各种情境和事物，树立正确的价值观和人生观。通过积极的校园氛围，学生可以感受到来自周围环境的支持和鼓励，进一步降低恐怖倾向。\n2.培养学生的理性思维：在教育过程中，注重培养学生的理性思维能力，帮助他们学会客观分析和评估各种情境和事物，避免因非理性思维而产生不必要的恐惧。通过理性思维，学生可以更加冷静地面对恐惧情境，增强心理适应能力。\n3.关注少数恐怖倾向学生：虽然大部分学生的恐怖倾向较低，但仍需关注那些表现出恐怖倾向的学生。为他们提供个性化的辅导和支持，如安排同伴互助、组织小组活动等，帮助他们克服恐惧，增强适应能力和心理承受能力。\n4.加强心理健康教育：定期开展心理健康教育活动，普及心理健康知识，让学生了解恐怖倾向的相关信息，认识到适度的恐惧反应是正常的，但过度恐惧可能对心理健康产生不良影响。通过心理健康教育，学生可以更好地认识自己，提高自我调节能力。"
-            },
-            {
-                dimensionName: "冲动倾向解释与建议",
-                percent: 73,
-                levelExplain: "在本次冲动倾向评估中，有70%及以上的学生表现出较低的冲动倾向。这表明大多数学生在面对诱惑和情绪波动时，能够保持较为冷静和理智的状态，具有较强的自我控制能力和情绪调节能力。这种情况有利于学生的学业发展、人际关系维护以及个人成长，使他们能够更好地应对生活中的挑战和压力。然而，仍需关注那些表现出较高冲动倾向的学生，确保他们也能得到有效的支持和帮助。",
-                suggestion: "1.继续营造良好的校园环境：保持并进一步优化学校的校园环境和氛围，为学生提供一个有利于自我控制和理性决策的学习和生活环境。良好的校园环境有助于学生保持稳定的心态，减少冲动行为的发生。\n2.培养学生的同理心：开展同理心教育课程或活动，培养学生的同理心和理解他人的能力。让学生学会理解和关心那些表现出冲动倾向的同学，主动关心和帮助他们，营造一个充满关爱和支持的集体氛围。\n3.关注少数冲动倾向学生：虽然大部分学生的冲动倾向较低，但仍需关注那些表现出冲动倾向的学生。为他们提供个性化的辅导和支持，如安排同伴互助、组织小组活动等，帮助他们提高自我控制能力和情绪调节能力。\n4.加强心理健康教育：定期开展心理健康教育活动，普及心理健康知识，让学生了解冲动倾向的相关信息，认识到适度的冲动反应是正常的，但过度冲动可能对个人发展产生不良影响。通过心理健康教育，学生可以更好地认识自己，提高自我调节能力。"
-            },
-        ])
+
         //earlyWarnig
         const CEWTableBoard1 = ref({
             header: ['维度名称', '类型', '人数占比'],
@@ -740,13 +820,7 @@ export default defineComponent({
             index: true,
             align: ['center']
         })
-        const CEWPie1 = ref([
-            { value: 0.8, name: '家庭亲密度低' },
-            { value: 0.7, name: '家庭冲突' },
-            { value: 0.25, name: '家长情绪不稳定' },
-            { value: 0.18, name: '社会支持不足' },
-            { value: 0.15, name: '师生关系差' },
-        ])
+
         const CEWTableBoard2 = ref({
             header: ['维度名称', '类型', '人数占比'],
             data: [
@@ -763,13 +837,22 @@ export default defineComponent({
             index: true,
             align: ['center']
         })
-        const CEWPie2 = ref([
-            { value: 0.8, name: '抑郁' },
-            { value: 0.7, name: '焦虑' },
-            { value: 0.66, name: '无助与无力感' },
-            { value: 0.18, name: '情绪失控' },
-            { value: 0.15, name: '挫败与气馁' },
-        ])
+        const CEWTableBoard5 = ref({
+            header: ['维度名称', '类型', '人数占比'],
+            data: [
+                ['家庭亲密度低', '阳性', "80%"],
+                ['家庭冲突', '阳性', "70%"],
+                ['家长情绪不稳定', '阴性', "25%"],
+                ['社会支持不足', '阴性', "18%"],
+                ['师生关系差', '阴性', "15%"],
+            ],
+            rowNum: 6, //表格行数
+            headerBGC: 'linear-gradient(rgba(116, 194, 255, 0.4), rgba(7, 125, 255, 0.4))',
+            oddRowBGC: '#0f1325', //奇数行
+            evenRowBGC: '#171c33', //偶数行
+            index: true,
+            align: ['center']
+        })
         const CEWTableBoard3 = ref({
             header: ['维度名称', '类型', '人数占比'],
             data: [
@@ -782,58 +865,29 @@ export default defineComponent({
             index: true,
             align: ['center']
         })
-        const CEWTableBoard4 = ref({
-            header: ['维度名称', '类型', '人数占比'],
-            data: [
-                ['社会决定完美主义', '阳性', "80%"],
-                ['状态性冲动', '阳性', "70%"],
-                ['攻击敌对', '阳性', "66%"],
-                ['问题解决困境', '阴性', "18%"],
-                ['反刍思维', '阴性', "15%"],
-                ['低自尊与自卑', '阴性', "12%"],
-            ],
-            rowNum: 6, //表格行数
-            headerBGC: 'linear-gradient(rgba(116, 194, 255, 0.4), rgba(7, 125, 255, 0.4))',
-            oddRowBGC: '#0f1325', //奇数行
-            evenRowBGC: '#171c33', //偶数行
-            index: true,
-            align: ['center']
-        })
-        const CEWPie4 = ref([
-            { value: 0.8, name: '社会决定完美主义' },
-            { value: 0.7, name: '状态性冲动' },
-            { value: 0.66, name: '攻击敌对' },
-            { value: 0.18, name: '问题解决困境' },
-            { value: 0.15, name: '反刍思维' },
-            { value: 0.12, name: '低自尊与自卑' },
-        ])
-
 
         return {
-            loading,
+            loadingState,
             appRef,
-            currentType,
             state,
             testSelectChange,
             router,
+            visualDetail,
+            termList,
+            loadData,
+            data,
+            loginUser,
 
-            PSFScrollText1,
-            PSFScrollText2,
+
             PSFTableBoard,
             MITableBoard,
-            PSFHorizontalColumn,
-            MIHorizontalColumn,
             MIRadarBoard,
             MIScrollText1,
             MIScrollText2,
             goToLastPage,
             goToNextPage,
-            HLDHorizontalColumn,
             HLDRadarBoard,
-            HLDSignificantTypeList,
-            HLDScrollText,
             MHTTableBoard,
-            MHTHorizontalColumn,
             MHTScrollText1,
             MHTScrollText2,
             CMITableBoard,
@@ -842,9 +896,6 @@ export default defineComponent({
             CHLDTableBoard,
             CHLDPieDataList,
             CHLDRadarBoard,
-            CMHTBoardList,
-            CPSFLevel,
-            CPSFPie,
             EWTableBoard1,
             EWRadarBoard1,
             EWTableBoard2,
@@ -853,12 +904,9 @@ export default defineComponent({
             EWTableBoard4,
             EWRadarBoard4,
             CEWTableBoard1,
-            CEWPie1,
             CEWTableBoard2,
-            CEWPie2,
             CEWTableBoard3,
-            CEWTableBoard4,
-            CEWPie4,
+            CEWTableBoard5,
         }
     },
 })
@@ -868,317 +916,360 @@ export default defineComponent({
     <div id="page">
         <div id="index" ref="appRef">
             <div class="bg">
-                <dv-loading v-if="loading">Loading...</dv-loading>
+                <dv-loading v-if="loadingState.pageLoading">Loading...</dv-loading>
                 <div v-else class="host-body">
                     <div class="vr-title">
                         <img src="../../assets/visualReport/titleBG.png" alt="lost">
-                        <span id="title" @click="state.isPersonal = !state.isPersonal">{{ title }}</span>
+                        <span id="title">{{ title }}</span>
                         <div class="left">
                             <img src="../../assets/visualReport/return.png" alt="return" class="return"
                                 style="cursor: pointer;" @click="router.go(-1)">
                             <div class="className">
-                                {{ state.className }}
+                                {{ visualDetail.className || visualDetail.studentName }}
                             </div>
                         </div>
                         <div class="right">
                             <a-select
-                                :style="{ width: '160px', height: '50px', borderRadius: '10px', background: 'radial-gradient(50.00% 50.00% at 50% 50%, rgb(77, 255, 223), rgb(77, 161, 255) 100%)', color: '#fff', fontSize: '18px', fontWeight: 'bold' }"
-                                v-model="state.term">
-                                <a-option value="current">2024-2025-1</a-option>
-                                <a-option value="first">2024-2025-2</a-option>
-                                <a-option value="second">2023-2024-1</a-option>
+                                :style="{ width: '170px', height: '50px', borderRadius: '10px', background: 'radial-gradient(50.00% 50.00% at 50% 50%, rgb(77, 255, 223), rgb(77, 161, 255) 100%)', color: '#fff', fontSize: '18px', fontWeight: 'bold' }"
+                                v-model="state.term" :loading="loadingState.termLoading" @change="loadData">
+                                <a-option v-for="(termItem, termIndex) in termList" :key="termIndex"
+                                    :value="termItem.value">{{
+                                        termItem.label }}</a-option>
                             </a-select>
                             <a-select
                                 :style="{ width: '260px', height: '50px', borderRadius: '10px', background: 'radial-gradient(50.00% 50.00% at 50% 50%, rgb(77, 255, 223), rgb(77, 161, 255) 100%)', color: '#fff', fontSize: '18px', fontWeight: 'bold' }"
-                                v-model="currentType" @change="testSelectChange">
+                                v-model="state.currentType" @change="testSelectChange">
                                 <a-option :value="0" label="社会情感能力数据可视化大屏">社会情感能力数据可视化大屏</a-option>
                                 <a-option :value="1" label="多元智能数据可视化大屏">多元智能数据可视化大屏</a-option>
                                 <a-option :value="2" label="霍兰德职业兴趣数据可视化大屏">霍兰德职业兴趣数据可视化大屏</a-option>
-                                <a-option :value="3" label="中小学生心理健康量表(MHT)数据可视化大屏">中小学生心理健康量表(MHT)数据可视化大屏</a-option>
-                                <a-option :value="4" label="学生动态心理预警数据可视化大屏">学生动态心理预警数据可视化大屏</a-option>
+                                <a-option v-if="loginUser.role === 'psychologist'" :value="3"
+                                    label="中小学生心理健康量表(MHT)数据可视化大屏">中小学生心理健康量表(MHT)数据可视化大屏</a-option>
+                                <a-option v-if="loginUser.role === 'psychologist'" :value="4"
+                                    label="学生动态心理预警数据可视化大屏">学生动态心理预警数据可视化大屏</a-option>
                             </a-select>
                             <a-select
                                 :style="{ width: '130px', height: '50px', borderRadius: '10px', background: 'radial-gradient(50.00% 50.00% at 50% 50%, rgb(77, 255, 223), rgb(77, 161, 255) 100%)', color: '#fff', fontSize: '18px', fontWeight: 'bold' }"
-                                v-model="state.report">
-                                <a-option value="latest">最新报告</a-option>
-                                <a-option value="first">第一次报告</a-option>
-                                <a-option value="second">第二次报告</a-option>
+                                v-model="state.cnt" @change="loadData">
+                                <a-option :value="0">最新报告</a-option>
+                                <a-option :value="1">第一次报告</a-option>
+                                <a-option :value="2">第二次报告</a-option>
                             </a-select>
 
                         </div>
                     </div>
-                    <div class="visualContent personalContent" v-if="state.isPersonal">
-                        <div class="personSocialFeeling" v-if="currentType === 0">
-                            <div class="firstLayer">
-                                <!-- wid+50,height+50 -->
-                                <dv-border-box1 style="width: 530px;height:400px;">
-                                    <table-board :config="PSFTableBoard" :boxWidth="480" :boxHeight="350"
-                                        board-title="社会情感能力总得分" />
-                                </dv-border-box1>
-                                <dv-border-box1 style="width: 830px;height:400px;">
-                                    <horizontal-column :dataSource="PSFHorizontalColumn" :boxWidth="800"
-                                        :boxHeight="350" board-title="总览统计" :currentType="currentType" />
-                                </dv-border-box1>
-                                <dv-border-box1 style="width: 530px;height:400px;">
-                                    <scroll-text :data="PSFScrollText1" :boxWidth="480" :boxHeight="330"
-                                        board-title="分数解析" />
-                                </dv-border-box1>
+
+                    <div v-if="data">
+                        <div class="visualContent personalContent" v-if="visualDetail.boardType">
+                            <div class="personSocialFeeling" v-if="state.currentType === 0">
+                                <div class="firstLayer">
+                                    <!-- wid+50,height+50 -->
+                                    <dv-border-box1 style="width: 530px;height:400px;">
+                                        <table-board :config="PSFTableBoard" :boxWidth="480" :boxHeight="350"
+                                            board-title="社会情感能力总得分" />
+                                    </dv-border-box1>
+                                    <dv-border-box1 style="width: 830px;height:400px;">
+                                        <horizontal-column :dataSource="(data as API.personalSFVisual).totalScore"
+                                            :boxWidth="800" :boxHeight="350" board-title="总览统计"
+                                            :currentType="state.currentType" />
+                                    </dv-border-box1>
+                                    <dv-border-box1 style="width: 530px;height:400px;">
+                                        <scroll-text :data="(data as API.personalSFVisual).scoreDesc" :boxWidth="480"
+                                            :boxHeight="330" board-title="分数解析" />
+                                    </dv-border-box1>
+                                </div>
+                                <div class="secondLayer">
+                                    <a-carousel :style="{
+                                        width: '100%',
+                                        height: '450px'
+                                    }" :default-current="1" :auto-play="true">
+                                        <a-carousel-item
+                                            v-for="(item, index) in (data as API.personalSFVisual).secondDimensionScore"
+                                            :key="index">
+                                            <dv-border-box1 style="width: 830px;height:450px;">
+                                                <secondary-ability :board-title="item.title + '详解'" :data="item" />
+                                            </dv-border-box1>
+                                            <dv-border-box1 style="width: 950px;height:450px;">
+                                                <scroll-text :data="item.secondLevel" :boxWidth="900" :boxHeight="380"
+                                                    :board-title="item.title + '分数解析'" />
+                                            </dv-border-box1>
+                                        </a-carousel-item>
+                                    </a-carousel>
+                                </div>
                             </div>
-                            <div class="secondLayer">
-                                <a-carousel :style="{
-                                    width: '100%',
-                                    height: '450px'
-                                }" :default-current="1" :auto-play="true">
-                                    <a-carousel-item v-for="item in 5">
-                                        <dv-border-box1 style="width: 830px;height:450px;">
-                                            <secondary-ability board-title="关爱能力详解" />
+                            <div class="mutipleIntelligence" v-else-if="state.currentType === 1">
+                                <div class="firstLayer">
+                                    <dv-border-box1 style="width: 530px;height:400px;">
+                                        <table-board :config="MITableBoard" :boxWidth="480" :boxHeight="350"
+                                            board-title="多元智能得分排名" />
+                                    </dv-border-box1>
+                                    <dv-border-box1 style="width: 830px;height:400px;">
+                                        <horizontal-column :dataSource="(data as API.personalMIVisual).rankList"
+                                            :boxWidth="800" :boxHeight="350" board-title="总览统计"
+                                            :currentType="state.currentType" />
+                                    </dv-border-box1>
+                                    <dv-border-box1 style="width: 530px;height:400px;">
+                                        <radar-board :data="MIRadarBoard" :boxWidth="500" :boxHeight="350"
+                                            board-title="多元智能维度分布" :currentType="state.currentType" />
+                                    </dv-border-box1>
+                                </div>
+                                <div class="secondLayer">
+                                    <dv-border-box1 style="width: 950px;height:450px;">
+                                        <scroll-text :data="MIScrollText1" :boxWidth="900" :boxHeight="380"
+                                            board-title="核心智能详解" />
+                                    </dv-border-box1>
+                                    <dv-border-box1 style="width: 950px;height:450px;">
+                                        <scroll-text :data="MIScrollText2" :boxWidth="900" :boxHeight="380"
+                                            board-title="相关学科推荐" />
+                                    </dv-border-box1>
+                                </div>
+                            </div>
+                            <div class="hollander" v-else-if="state.currentType === 2">
+                                <div class="firstLayer">
+                                    <dv-border-box1 style="width: 480px;height:400px;">
+                                        <significant-type :data="(data as API.personalHLDVisual).professionCode"
+                                            :boxWidth="450" :boxHeight="350" board-title="显著类型" />
+                                    </dv-border-box1>
+                                    <dv-border-box1 style="width: 830px;height:400px;">
+                                        <horizontal-column :dataSource="(data as API.personalHLDVisual).score"
+                                            :boxWidth="800" :boxHeight="350" board-title="总览统计"
+                                            :currentType="state.currentType" />
+                                    </dv-border-box1>
+                                    <dv-border-box1 style="width: 620px;height:400px;">
+                                        <radar-board :data="HLDRadarBoard" :boxWidth="610" :boxHeight="350"
+                                            board-title="霍兰德维度分布" :currentType="state.currentType" />
+                                    </dv-border-box1>
+                                </div>
+                                <div class="secondLayer">
+                                    <dv-border-box1 style="width: 950px;height:450px;">
+                                        <scroll-text :data="(data as API.personalHLDVisual).professionExplain"
+                                            :boxWidth="900" :boxHeight="380" board-title="霍兰德类型详解" isHollander=true
+                                            HLDTypeDetail=true />
+                                    </dv-border-box1>
+                                    <dv-border-box1 style="width: 950px;height:450px;">
+                                        <scroll-text :data="(data as API.personalHLDVisual).professionExplain"
+                                            :boxWidth="900" :boxHeight="380" board-title="维度解析" isHollander=true
+                                            HLDDimensionDetail=true />
+                                    </dv-border-box1>
+                                </div>
+                            </div>
+                            <div class="MHT" v-else-if="state.currentType === 3">
+                                <div class="firstLayer">
+                                    <dv-border-box1 style="width: 530px;height:500px;">
+                                        <table-board :config="MHTTableBoard" :boxWidth="480" :boxHeight="450"
+                                            board-title="MHT得分排名" />
+                                    </dv-border-box1>
+                                    <dv-border-box1 style="width: 830px;height:500px;">
+                                        <horizontal-column :dataSource="(data as API.personalMHTVisual).score"
+                                            :boxWidth="800" :boxHeight="450" board-title="总览统计"
+                                            :currentType="state.currentType" />
+                                    </dv-border-box1>
+                                    <dv-border-box1 style="width: 530px;height:500px;">
+                                        <scroll-text :data="MHTScrollText1" :boxWidth="480" :boxHeight="430"
+                                            board-title="MHT维度介绍" />
+                                    </dv-border-box1>
+                                </div>
+                                <div class="secondLayer">
+                                    <dv-border-box1 style="width: 1600;height:350px;">
+                                        <scroll-text :data="MHTScrollText2" :boxWidth="1580" :boxHeight="280"
+                                            board-title="辅导建议" />
+                                    </dv-border-box1>
+                                </div>
+                            </div>
+                            <div class="earlyWarnig" v-else-if="state.currentType === 4">
+                                <div class="left">
+                                    <div class="leftTop">
+                                        <dv-border-box1 style="width: 530px;height:650px;">
+                                            <table-board :config="EWTableBoard1" :boxWidth="480" :boxHeight="300"
+                                                board-title="易损处境维度分析" :isEarlyWarning="true" />
+                                            <radar-board :currentType="state.currentType" :data="EWRadarBoard1"
+                                                :boxWidth="480" :boxHeight="350" />
                                         </dv-border-box1>
-                                        <dv-border-box1 style="width: 950px;height:450px;">
-                                            <scroll-text :data="PSFScrollText2" :boxWidth="900" :boxHeight="380"
-                                                board-title="关爱能力分数解析" />
+                                        <dv-border-box1 style="width: 530px;height:650px;">
+                                            <table-board :config="EWTableBoard2" :boxWidth="480" :boxHeight="300"
+                                                board-title="心理痛苦维度分析" :isEarlyWarning="true" />
+                                            <radar-board :currentType="state.currentType" :data="EWRadarBoard2"
+                                                :boxWidth="480" :boxHeight="350" />
                                         </dv-border-box1>
-                                    </a-carousel-item>
-                                </a-carousel>
-                            </div>
-                        </div>
-                        <div class="mutipleIntelligence" v-else-if="currentType === 1">
-                            <div class="firstLayer">
-                                <dv-border-box1 style="width: 530px;height:400px;">
-                                    <table-board :config="MITableBoard" :boxWidth="480" :boxHeight="350"
-                                        board-title="多元智能得分排名" />
-                                </dv-border-box1>
-                                <dv-border-box1 style="width: 830px;height:400px;">
-                                    <horizontal-column :dataSource="MIHorizontalColumn" :boxWidth="800" :boxHeight="350"
-                                        board-title="总览统计" :currentType="currentType" />
-                                </dv-border-box1>
-                                <dv-border-box1 style="width: 530px;height:400px;">
-                                    <radar-board :data="MIRadarBoard" :boxWidth="500" :boxHeight="350"
-                                        board-title="多元智能维度分布" :currentType="currentType" />
-                                </dv-border-box1>
-                            </div>
-                            <div class="secondLayer">
-                                <dv-border-box1 style="width: 950px;height:450px;">
-                                    <scroll-text :data="MIScrollText1" :boxWidth="900" :boxHeight="380"
-                                        board-title="核心智能详解" />
-                                </dv-border-box1>
-                                <dv-border-box1 style="width: 950px;height:450px;">
-                                    <scroll-text :data="MIScrollText2" :boxWidth="900" :boxHeight="380"
-                                        board-title="相关学科推荐" />
-                                </dv-border-box1>
-                            </div>
-                        </div>
-                        <div class="hollander" v-else-if="currentType === 2">
-                            <div class="firstLayer">
-                                <dv-border-box1 style="width: 480px;height:400px;">
-                                    <significant-type :data="HLDSignificantTypeList" :boxWidth="450" :boxHeight="350"
-                                        board-title="显著类型" />
-                                </dv-border-box1>
-                                <dv-border-box1 style="width: 830px;height:400px;">
-                                    <horizontal-column :dataSource="HLDHorizontalColumn" :boxWidth="800"
-                                        :boxHeight="350" board-title="总览统计" :currentType="currentType" />
-                                </dv-border-box1>
-                                <dv-border-box1 style="width: 620px;height:400px;">
-                                    <radar-board :data="HLDRadarBoard" :boxWidth="610" :boxHeight="350"
-                                        board-title="霍兰德维度分布" :currentType="currentType" />
-                                </dv-border-box1>
-                            </div>
-                            <div class="secondLayer">
-                                <dv-border-box1 style="width: 950px;height:450px;">
-                                    <scroll-text :data="HLDScrollText" :boxWidth="900" :boxHeight="380"
-                                        board-title="霍兰德类型详解" isHollander=true HLDTypeDetail=true />
-                                </dv-border-box1>
-                                <dv-border-box1 style="width: 950px;height:450px;">
-                                    <scroll-text :data="HLDScrollText" :boxWidth="900" :boxHeight="380"
-                                        board-title="维度解析" isHollander=true HLDDimensionDetail=true />
-                                </dv-border-box1>
-                            </div>
-                        </div>
-                        <div class="MHT" v-else-if="currentType === 3">
-                            <div class="firstLayer">
-                                <dv-border-box1 style="width: 530px;height:500px;">
-                                    <table-board :config="MHTTableBoard" :boxWidth="480" :boxHeight="450"
-                                        board-title="MHT得分排名" />
-                                </dv-border-box1>
-                                <dv-border-box1 style="width: 830px;height:500px;">
-                                    <horizontal-column :dataSource="MHTHorizontalColumn" :boxWidth="800"
-                                        :boxHeight="450" board-title="总览统计" :currentType="currentType" />
-                                </dv-border-box1>
-                                <dv-border-box1 style="width: 530px;height:500px;">
-                                    <scroll-text :data="MHTScrollText1" :boxWidth="480" :boxHeight="430"
-                                        board-title="MHT维度介绍" />
-                                </dv-border-box1>
-                            </div>
-                            <div class="secondLayer">
-                                <dv-border-box1 style="width: 1600;height:350px;">
-                                    <scroll-text :data="MHTScrollText2" :boxWidth="1580" :boxHeight="280"
-                                        board-title="辅导建议" />
-                                </dv-border-box1>
-                            </div>
-                        </div>
-                        <div class="earlyWarnig" v-else-if="currentType === 4">
-                            <div class="left">
-                                <div class="leftTop">
-                                    <dv-border-box1 style="width: 530px;height:650px;">
-                                        <table-board :config="EWTableBoard1" :boxWidth="480" :boxHeight="300"
-                                            board-title="易损处境维度分析" :isEarlyWarning="true" />
-                                        <radar-board :currentType="currentType" :data="EWRadarBoard1" :boxWidth="480"
-                                            :boxHeight="350" />
-                                    </dv-border-box1>
-                                    <dv-border-box1 style="width: 530px;height:650px;">
-                                        <table-board :config="EWTableBoard2" :boxWidth="480" :boxHeight="300"
-                                            board-title="心理痛苦维度分析" :isEarlyWarning="true" />
-                                        <radar-board :currentType="currentType" :data="EWRadarBoard2" :boxWidth="480"
-                                            :boxHeight="350" />
-                                    </dv-border-box1>
+                                    </div>
+                                    <div class="leftBottom">
+                                        <dv-border-box1 style="width: 1060px;height:200px;">
+                                            <table-board :config="EWTableBoard3" :boxWidth="600" :boxHeight="150"
+                                                board-title="自杀意念程度" :isEarlyWarning="true" />
+                                            <PipeBoard :currentType="state.currentType"
+                                                :percent="(data as API.personalWarnVisual).suicide.score[2]"
+                                                :boxWidth="480" :boxHeight="100" />
+                                        </dv-border-box1>
+                                    </div>
                                 </div>
-                                <div class="leftBottom">
-                                    <dv-border-box1 style="width: 1060px;height:200px;">
-                                        <table-board :config="EWTableBoard3" :boxWidth="400" :boxHeight="150"
-                                            board-title="自杀意念程度" :isEarlyWarning="true" />
-                                        <PipeBoard :currentType="currentType" :percent="15" :boxWidth="480"
-                                            :boxHeight="100" />
+                                <div class="right">
+                                    <dv-border-box1 style="width: 830px;height:850px;">
+                                        <table-board :config="EWTableBoard4" :boxWidth="780" :boxHeight="420"
+                                            board-title="易损特质维度分析" :isEarlyWarning="true" />
+                                        <radar-board :currentType="state.currentType" :data="EWRadarBoard4"
+                                            :boxWidth="780" :boxHeight="380" />
                                     </dv-border-box1>
                                 </div>
                             </div>
-                            <div class="right">
-                                <dv-border-box1 style="width: 830px;height:850px;">
-                                    <table-board :config="EWTableBoard4" :boxWidth="780" :boxHeight="420"
-                                        board-title="易损特质维度分析" :isEarlyWarning="true" />
-                                    <radar-board :currentType="currentType" :data="EWRadarBoard4" :boxWidth="780"
-                                        :boxHeight="380" />
-                                </dv-border-box1>
-                            </div>
                         </div>
-                    </div>
-                    <div class="visualContent collectiveContent" v-else>
-                        <div class="personSocialFeeling" v-if="currentType === 0">
-                            <div class="firstLayer">
-                                <a-carousel :style="{
-                                    width: '100%',
-                                    height: '530px'
-                                }" :default-current="1" :auto-play="true">
-                                    <a-carousel-item v-for="item in 5">
-                                        <div class="everyLevelTile">{{ CPSFLevel.levelName }}描述</div>
-                                        <div class="everyLevel">
-                                            <div class="leftTop">
-                                                <level-stage :data="CPSFLevel" :boxWidth="750" :boxHeight="180" />
-                                                <dv-border-box1 style="width: 750px;height:240px;">
-                                                    <scroll-text :data="CPSFLevel.describe" :boxWidth="700"
-                                                        :boxHeight="180" board-title="整体情况描述" />
-                                                </dv-border-box1>
+                        <div class="visualContent collectiveContent" v-else>
+                            <div class="personSocialFeeling" v-if="state.currentType === 0">
+                                <div class="firstLayer">
+                                    <a-carousel :style="{
+                                        width: '100%',
+                                        height: '530px'
+                                    }" :default-current="1" :auto-play="true" @change="">
+                                        <a-carousel-item v-for="(item, index) in (data as API.collectiveSFVisual).list"
+                                            :key="index">
+                                            <div class="everyLevelTile">二级能力轮播图--{{ item.levelName }}描述</div>
+                                            <div class="everyLevel">
+                                                <div class="leftTop">
+                                                    <level-stage :data="item" :boxWidth="750" :boxHeight="180" />
+                                                    <dv-border-box1 style="width: 750px;height:240px;">
+                                                        <scroll-text :data="item.describe" :boxWidth="700"
+                                                            :boxHeight="180" board-title="整体情况描述"
+                                                            :isActive="index === activeIndex" />
+                                                    </dv-border-box1>
+                                                </div>
+                                                <div class="rightLevel">
+                                                    <dv-border-box1 style="width: 1150px;height:530px;">
+                                                        <secondary-detail :data="item.secondLevel" :boxWidth="1100"
+                                                            :boxHeight="480" />
+                                                    </dv-border-box1>
+                                                </div>
                                             </div>
-                                            <div class="rightLevel">
-                                                <dv-border-box1 style="width: 1150px;height:530px;">
-                                                    <secondary-detail :data="CPSFLevel.secondLevel" :boxWidth="1100"
-                                                        :boxHeight="480" />
-                                                </dv-border-box1>
-                                            </div>
-                                        </div>
 
 
-                                    </a-carousel-item>
-                                </a-carousel>
-                            </div>
-                            <div class="secondLayer">
-                                <dv-border-box1 style="width: 1030px;height:330px;">
-                                    <horizontal-column :dataSource="PSFHorizontalColumn" :boxWidth="1000"
-                                        :boxHeight="280" board-title="总览统计" :currentType="currentType" />
-                                </dv-border-box1>
-                                <dv-border-box1 style="width: 850px;height:330px;">
-                                    <pie-board :data="CPSFPie" :boxWidth="800" :boxHeight="280" board-title="分布呈现" />
-                                </dv-border-box1>
-                            </div>
-                        </div>
-                        <div class="mutipleIntelligence" v-else-if="currentType === 1">
-                            <div class="leftLayer">
-                                <dv-border-box1 style="width: 900px;height:450px;">
-                                    <table-board :config="CMITableBoard" :boxWidth="850" :boxHeight="400"
-                                        board-title="多元智能集体得分排名" />
-                                </dv-border-box1>
-                                <div class="pipeBox">
-                                    <PipeBoard v-for="(item, index) in CMIPieDataList" :key="index" :data="item"
-                                        :boxWidth="200" :boxHeight="150" :currenType="currentType" />
+                                        </a-carousel-item>
+                                    </a-carousel>
                                 </div>
-                            </div>
-                            <div class="rightLayer">
-                                <dv-border-box1 style="width: 1000px;height:850px;">
-                                    <horizontal-column :dataSource="CMIDoubleColumn" :boxWidth="980" :boxHeight="800"
-                                        boardTitle="多元智能总览统计" :currentType="currentType" />
-                                </dv-border-box1>
-                            </div>
-                        </div>
-                        <div class="hollander" v-else-if="currentType === 2">
-                            <div class="leftLayer">
-                                <dv-border-box1 style="width: 900px;height:450px;">
-                                    <table-board :config="CHLDTableBoard" :boxWidth="850" :boxHeight="400"
-                                        board-title="霍兰德显著类型排名" :isHollander="true" />
-                                </dv-border-box1>
-                                <div class="pipeBox">
-                                    <PipeBoard v-for="(item, index) in CHLDPieDataList" :key="index" :data="item"
-                                        :boxWidth="250" :boxHeight="150" :currenType="currentType" />
-                                </div>
-                            </div>
-                            <div class="rightLayer">
-                                <dv-border-box1 style="width: 1000px;height:850px;">
-                                    <radar-board :data="CHLDRadarBoard" :boxWidth="980" :boxHeight="800"
-                                        board-title="霍兰德集体统计" :currentType="currentType" :radius="250" />
-                                </dv-border-box1>
-                            </div>
-                        </div>
-                        <div class="MHT" v-else-if="currentType === 3">
-                            <dv-border-box1 style="width: 450px;height:410px;" v-for="(item, index) in CMHTBoardList"
-                                :key="index">
-                                <collective-dimension-board :data="item" :boxHeight="340" :boxWidth="400" />
-                            </dv-border-box1>
-                        </div>
-                        <div class="earlyWarnig" v-else-if="currentType === 4">
-                            <div class="left">
-                                <div class="leftTop">
-                                    <dv-border-box1 style="width: 530px;height:650px;">
-                                        <table-board :config="CEWTableBoard1" :boxWidth="480" :boxHeight="300"
-                                            board-title="易损处境维度分析" :isEarlyWarning="true" />
-                                        <pie-board :data="CEWPie1" :boxWidth="480" :boxHeight="350"
-                                            :radius="['30%', '50%']" :label="false" />
+                                <div class="secondLayer">
+                                    <dv-border-box1 style="width: 1030px;height:330px;">
+                                        <horizontal-column
+                                            :dataSource="(data as API.collectiveSFVisual)?.pieAndBarList.barList"
+                                            :boxWidth="1000" :boxHeight="280" board-title="一级能力为A的总览统计"
+                                            :currentType="state.currentType" />
                                     </dv-border-box1>
-                                    <dv-border-box1 style="width: 530px;height:650px;">
-                                        <table-board :config="CEWTableBoard2" :boxWidth="480" :boxHeight="300"
-                                            board-title="心理痛苦维度分析" :isEarlyWarning="true" />
-                                        <pie-board :data="CEWPie2" :boxWidth="480" :boxHeight="350"
-                                            :radius="['30%', '50%']" :label="false" />
-
-                                    </dv-border-box1>
-                                </div>
-                                <div class="leftBottom">
-                                    <dv-border-box1 style="width: 1060px;height:200px;">
-                                        <table-board :config="CEWTableBoard3" :boxWidth="400" :boxHeight="150"
-                                            board-title="自杀意念程度" :isEarlyWarning="true" />
-                                        <PipeBoard :currentType="currentType" :percent="15" :boxWidth="480"
-                                            :boxHeight="100" />
+                                    <dv-border-box1 style="width: 850px;height:330px;">
+                                        <pie-board :data="(data as API.collectiveSFVisual)?.pieAndBarList.pieList"
+                                            :boxWidth="800" :boxHeight="280" board-title="一级能力为A的人次分布呈现" />
                                     </dv-border-box1>
                                 </div>
                             </div>
-                            <div class="right">
-                                <dv-border-box1 style="width: 830px;height:850px;">
-                                    <table-board :config="CEWTableBoard1" :boxWidth="780" :boxHeight="420"
-                                        board-title="易损特质维度分析" :isEarlyWarning="true" />
-                                    <pie-board :data="CEWPie4" :boxWidth="780" :boxHeight="380" :radius="['30%', '50%']"
-                                        :label="false" />
-
+                            <div class="mutipleIntelligence" v-else-if="state.currentType === 1">
+                                <div class="leftLayer">
+                                    <dv-border-box1 style="width: 900px;height:450px;">
+                                        <table-board :config="CMITableBoard" :boxWidth="850" :boxHeight="400"
+                                            board-title="多元智能集体得分排名" />
+                                    </dv-border-box1>
+                                    <div class="pipeBox">
+                                        <PipeBoard v-for="(item, index) in CMIPieDataList" :key="index" :data="item"
+                                            :boxWidth="200" :boxHeight="150" :currenType="state.currentType" />
+                                    </div>
+                                </div>
+                                <div class="rightLayer">
+                                    <dv-border-box1 style="width: 1000px;height:850px;">
+                                        <horizontal-column :dataSource="CMIDoubleColumn" :boxWidth="980"
+                                            :boxHeight="800" boardTitle="多元智能总览统计" :currentType="state.currentType" />
+                                    </dv-border-box1>
+                                </div>
+                            </div>
+                            <div class="hollander" v-else-if="state.currentType === 2">
+                                <div class="leftLayer">
+                                    <dv-border-box1 style="width: 900px;height:450px;">
+                                        <table-board :config="CHLDTableBoard" :boxWidth="850" :boxHeight="400"
+                                            board-title="霍兰德显著类型排名" :isHollander="true" />
+                                    </dv-border-box1>
+                                    <div class="pipeBox">
+                                        <PipeBoard v-for="(item, index) in CHLDPieDataList" :key="index" :data="item"
+                                            :boxWidth="250" :boxHeight="150" :currenType="state.currentType" />
+                                    </div>
+                                </div>
+                                <div class="rightLayer">
+                                    <dv-border-box1 style="width: 1000px;height:850px;">
+                                        <radar-board :data="CHLDRadarBoard" :boxWidth="980" :boxHeight="800"
+                                            board-title="霍兰德集体统计" :currentType="state.currentType" :radius="250" />
+                                    </dv-border-box1>
+                                </div>
+                            </div>
+                            <div class="MHT" v-else-if="state.currentType === 3">
+                                <dv-border-box1 style="width: 450px;height:410px;" v-for="(item, index) in data"
+                                    :key="index">
+                                    <collective-dimension-board :data="item" :boxHeight="340" :boxWidth="400" />
                                 </dv-border-box1>
                             </div>
+                            <div class="earlyWarnig" v-else-if="state.currentType === 4">
+                                <div class="left">
+                                    <div class="leftTop">
+                                        <dv-border-box1 style="width: 530px;height:650px;">
+                                            <table-board :config="CEWTableBoard1" :boxWidth="480" :boxHeight="300"
+                                                board-title="易损处境维度分析" :isEarlyWarning="true" />
+                                            <pie-board :data="(data as Array<API.collectiveWarnVisualItem>)[0].pie"
+                                                :boxWidth="480" :boxHeight="350" :radius="['30%', '50%']"
+                                                :label="false" />
+                                        </dv-border-box1>
+                                        <dv-border-box1 style="width: 530px;height:650px;">
+                                            <table-board :config="CEWTableBoard2" :boxWidth="480" :boxHeight="300"
+                                                board-title="心理痛苦维度分析" :isEarlyWarning="true" />
+                                            <pie-board :data="(data as Array<API.collectiveWarnVisualItem>)[2].pie"
+                                                :boxWidth="480" :boxHeight="350" :radius="['30%', '50%']"
+                                                :label="false" />
+
+                                        </dv-border-box1>
+                                    </div>
+                                    <div class="leftBottom">
+                                        <dv-border-box1 style="width: 1060px;height:200px;">
+                                            <table-board :config="CEWTableBoard3" :boxWidth="400" :boxHeight="150"
+                                                board-title="自杀意念程度" :isEarlyWarning="true" />
+                                            <PipeBoard :currentType="state.currentType"
+                                                :percent="(data as Array<API.collectiveWarnVisualItem>)[3].pie[0].value"
+                                                :boxWidth="480" :boxHeight="100" />
+                                        </dv-border-box1>
+                                    </div>
+                                </div>
+                                <div class="right">
+                                    <dv-border-box1 style="width: 830px;height:850px;">
+                                        <table-board :config="CEWTableBoard5" :boxWidth="780" :boxHeight="420"
+                                            board-title="易损特质维度分析" :isEarlyWarning="true" />
+                                        <pie-board :data="(data as Array<API.collectiveWarnVisualItem>)[1].pie"
+                                            :boxWidth="780" :boxHeight="380" :radius="['30%', '50%']" :label="false" />
+
+                                    </dv-border-box1>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="changePage">
+                            <button class="lastPage changePageButton" @click="goToLastPage"
+                                :disabled="state.currentType === 0"
+                                :class="{ disable: state.currentType === 0 }">上一页</button>
+                            <button v-if="loginUser.role === 'psychologist'" class="nextPage changePageButton"
+                                @click="goToNextPage" :disabled="state.currentType === 4"
+                                :class="{ disable: state.currentType === 4 }">下一页</button>
+                            <button v-else class="nextPage changePageButton" @click="goToNextPage"
+                                :disabled="state.currentType === 2"
+                                :class="{ disable: state.currentType === 2 }">下一页</button>
                         </div>
                     </div>
-
-                    <div class="changePage">
-                        <button class="lastPage changePageButton" @click="goToLastPage" :disabled="currentType === 0"
-                            :class="{ disable: currentType === 0 }">上一页</button>
-                        <button class="nextPage changePageButton" @click="goToNextPage" :disabled="currentType === 4"
-                            :class="{ disable: currentType === 4 }">下一页</button>
+                    <div v-else-if="!data" class="noData">
+                        <div class="noData">
+                            <img src="../../assets/image/noStuData.png" alt="noStuData">
+                            <p>查找不到学生数据</p>
+                        </div>
+                        <div class="changePage">
+                            <button class="lastPage changePageButton" @click="goToLastPage"
+                                :disabled="state.currentType === 0"
+                                :class="{ disable: state.currentType === 0 }">上一页</button>
+                            <button v-if="loginUser.role === 'psychologist'" class="nextPage changePageButton"
+                                @click="goToNextPage" :disabled="state.currentType === 4"
+                                :class="{ disable: state.currentType === 4 }">下一页</button>
+                            <button v-else class="nextPage changePageButton" @click="goToNextPage"
+                                :disabled="state.currentType === 2"
+                                :class="{ disable: state.currentType === 2 }">下一页</button>
+                        </div>
                     </div>
-
-
                 </div>
             </div>
+
         </div>
     </div>
 
@@ -1186,4 +1277,20 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 @import '../../assets/scss/visualReport.scss';
+
+.noData {
+    width: 100%;
+    height: 90%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 700;
+
+    img {
+        width: 50%;
+        height: fit-content;
+    }
+}
 </style>

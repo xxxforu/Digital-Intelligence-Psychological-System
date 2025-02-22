@@ -5,8 +5,14 @@ declare namespace API {
     msg?:string
   }
   type TestInform = {
-    questionId: string,
-    questionType: number,
+    questionId?: string,
+    studentId?:number,
+    questionType?: number,
+    cnt?: number,
+    gradeId?: number,
+    classedId?: number,
+    term?: string,
+    studentName?:string
   }
   type LoginUserVO = {
     id?: number;
@@ -41,7 +47,8 @@ declare namespace API {
     term: string,
     cnt?: number,
     endTime?: string,
-    status: number
+    status: number,
+    questionStatus:number,
   }
   // 学生获取问题列表
   type TestModule = {
@@ -69,22 +76,53 @@ declare namespace API {
     questionType: number,
     choices:Array<string>
   }
-  // 学生获取社会情感报告
+  // 获取社会情感报告
   type StuSFReportProps = {
     scoreDistribute?: Object<MaxRadarEndedData>,
-    totalScore?: Array<Array<string>>,
+    totalScore?: Array<Array<string>> | Array<Array<string|number>>,
     scoreDesc?: Array<SocialFeelingText>,
-    radarData?:Object<MaxRadarFrontedData>
+    radarData?: Object<MaxRadarFrontedData>
+    intervention?: string,
+    reportMark?:Array<string>,
+  }
+   // 心理老师获取MHT报告
+  type psyMHTReportProps = {
+    distribute?: Object<MaxRadarEndedData>,
+    score?: Array<Array<string>>| Array<Array<string|number>>,
+    details?: Array<MHTText>,
+    radarData?: Object<MaxRadarFrontedData>
+    intervention?: string,
+    reportMark?:Array<string>,
+  }
+  // 心理老师获取心理预警报告
+  type psyWarnReportProps = {
+    dimensionExplain: Array<WarnText>,
+    heartPain: Object<warnEndedData>,
+    vulnerablePosition: Object<warnEndedData>,
+    vulnerableTrait: Object<warnEndedData>,
+    suicide: Object<warnEndedData>,
+    intervention?: string,
+    reportMark?: Array<string>,
+    HPRadarData?: Object<MaxRadarFrontedData>,
+    VPRadarData?: Object<MaxRadarFrontedData>,
+    VTRadarData?: Object<MaxRadarFrontedData>
   }
   // 雷达图后端数据
   type MaxRadarEndedData = {
     scoreValues: Array<string>,//value
     list:Array<Object>//indicator
   }
+  //心理预警雷达图后端数据
+  type warnEndedData = {
+    indicator?: Array<Object>,
+    score: Array<number>,
+    firstDimension:string,
+  }
   // 雷达图前端数据
   type MaxRadarFrontedData = {
     value: Array<string>,//value
-    indicator:Array<Object>//indicator
+    indicator: Array<Object>,//indicator
+    otherValues?:Array<number>
   }
   // 社会情感文字报告
   type SocialFeelingText = {
@@ -110,6 +148,9 @@ declare namespace API {
     characterDesc: string,//类型解释
     characterCase: string,//相关生活案例
     majorLocation: string,//推荐专业定位
+    majorDirection?: string,
+    majorRecommend?: Array<SubjectText>//推荐专业
+    
   }
   //多元智能测试报告
   type IntelligenceText = {
@@ -117,7 +158,25 @@ declare namespace API {
     resultDesc: string,//维度评语
     dimensionDesc: string,//维度解释
     method: string,//建议
-    majorRecommend:Array<SubjectText>//推荐专业
+    majorRecommend: Array<SubjectText>//推荐专业
+    resultScore: number,
+    selfRepresent:string,
+  }
+  //MHT测试报告
+  type MHTText = {
+    advice: string,
+    resultName: string,//维度名称
+    resultDesc: string,//维度评语
+    resultScore: number,
+  }
+  //心理预警测试报告
+  type WarnText = {
+    advice: string,
+    firstDimension:string,
+    resultName: string,//维度名称
+    resultDesc: string,//维度评语
+    resultScore: number,
+    warnType:string
   }
   //每个学科类型详情
   type SubjectText = {
@@ -125,6 +184,7 @@ declare namespace API {
     majorMain: string,//学科类型名称
     majorInclude: string,//包含学科
     majorDesc: string,//学科类型介绍
+    recommend?:string
   }
   //混合报告
   type IGHLDMixText = {
@@ -137,18 +197,29 @@ declare namespace API {
     questions: Array<PsyQuestionItem>
   }
   type PsyQuestionItem = {
-    id: string,
+    questionId: string,
     questionTitle: string,
+    classesId?: number | string,
+    gradeId?:number,
     term: string,
     cnt: number,
     endTime?: string,
+    startTime?:string,
     status: number,
     includeClassesStr: string,
-    includeClasses?:string
+    includeClasses?: string,
+    questionType?: number,
+    classesName?: string,
+    finishTime?: string,
+    name?: string,
+    number?: string,
+    questionStatus?: number,
+    studentId?: number,
   }
   //心理老师上线测评
   type OnlineProps = {
-    classesIds: Array<string>,
+    classesIds: Array<number>,
+    gradeIds: Array<number>,
     questionType: number,
     cnt: number,
     startTime: string,
@@ -160,13 +231,174 @@ declare namespace API {
     gradeId:number
   }
   type GetClassesListProps = {
-    gradeIds: Array<string>,
-    questionType: number,
-    cnt: number,
+    gradeIds: Array<string> | Array<number>,
+    questionType?: number,
+    cnt?: number,
     term?:string,
   }
   type ClassListItem = {
     classesName:string ,
     classesId: number
+  }
+  type StudentListItem = {
+    name: string,
+    id:number
+  }
+  //获取报告
+  type teacherGetReportParams = {
+    studentId: number,
+    term: string,
+    questionType: number,
+    cnt:number
+  }
+  //心理老师标记报告
+  type MarkParams = {
+    tagList: Array<string>,
+    studentId: number,
+    term: string,
+    questionType: number,
+    cnt: number
+  }
+  //心理老师标记报告
+  type InterventionParams = {
+    intervention: string,
+    studentId: number,
+    term: string,
+    questionType: number,
+    cnt:number
+  }
+  //老师获取集体可视化报告
+  type CollectiveVisualProps = {
+    classesIds: Array<number>,
+    resultType: number,
+    term?: string,
+    cnt?:number
+  }
+  type PersonalVisualProps = {
+    uid: number,
+    resultType: number,
+    term?: string,
+    cnt?:number
+  }
+  //全局存储可视化报告信息
+  type VisualDetail = {
+    uid?:number,
+    resultType: number,
+    cnt?: number,
+    classedIds?: Array<number>,
+    term: string,
+    studentName?: string,
+    boardType: number,
+    className?:string,
+  }
+
+  //可视化图表数据类型
+  type scrollText = {
+    title: string,
+    content: string,
+    overview?:string
+  }
+  type SFSecondLevelItem = {
+   overview: string,
+    level: string,
+    levelName: string,
+    percent: number,
+    content:string
+  }
+  type PieDataItem = {
+    value: number,
+    name:string,
+  }
+  type pieAndBarListProps = {
+    barList: Array<Array<string>> | Array<Array<any>>,
+    pieList:Array<PieDataItem>
+  }
+  type personalSFScoreItem = {
+    title: string,
+    point: number,
+    secondLevel:Array<secondAbilityItem>
+  }
+  type secondAbilityItem = {
+    level: string,
+    title: string,
+    point: number,
+    content:string,
+  }
+  type significantTypeItem = {
+    type2: string,
+    type1: string,
+    type0: string
+  }
+
+  //可视化报告数据类型
+  //集体
+  type collectiveSFVisual = {
+    list: Array<collectiveSFVisualItem>,
+    pieAndBarList:Object<pieAndBarListProps>
+   }
+  type collectiveSFVisualItem = {
+    levelName: string,//一级能力名称
+    level: string,//一级能力等级
+    percent: number,//一级能力占比
+    describe: Array<scrollText>,
+    secondLevel:Array<SFSecondLevelItem>
+  }
+  type collectiveMIVisual = {
+    data:Array<Array<string>>
+  }
+  type collectiveHLDVisual = {
+    rank: Array<Array<string | number>>,
+    distribute:Object<MaxRadarFrontedData>
+  }
+  type collectiveMHTVisual = {
+    list:Array<API.collectiveMHTVisualItem>
+  }
+  type collectiveMHTVisualItem = {
+    advice: string,
+    dimension: string,
+    rankDesc: string,
+    rate:number
+  }
+  type collectiveWarnVisual = {
+    list:Array<API.collectiveWarnVisualItem>
+  }
+  type collectiveWarnVisualItem = {
+    analysis: Object<WarnModule>,
+    pie:Array<PieDataItem>
+  }
+  type WarnModule = {
+    dimension: string,
+    list:Array<Array<number | string>>
+  }
+  //个人
+  type personalSFVisual = {
+    rankList: Array<Array<string>>,
+    secondDimensionScore:Array<API.personalSFScoreItem>,
+    totalScore: Array<Array<string>> | Array<Array<any>>,
+    scoreDesc:Array<Array<string>>,
+  }
+  type personalMIVisual = {
+    rankList: Array<Array<string>>| Array<Array<any>>,
+    scoreDistribute: Object<MaxRadarEndedData>,
+    intelligenceExplainAndRecommend:Array<IntelligenceText>
+  }
+  type personalHLDVisual = {
+    professionCode: Array<significantTypeItem>,
+    score: Array<Array<string>> | Array<Array<string|number>>,
+    professionExplain:Array<HollanderText>
+  }
+  type personalMHTVisual = {
+    score: Array<Array<string | number>>,
+    explain:Array<MHTText>
+  }
+  type personalWarnVisual = {
+    vulnerablePositionExplain: Array<Array<string>>,
+    vulnerableTraitExplain: Array<Array<string>>,
+    suicide: Object<warnEndedData>,
+    heartPainExplain: Array<Array<string>>,
+    suicideExplain: Array<Array<string>>,
+    heartPain: Object<warnEndedData>,
+    vulnerableTrait: Object<warnEndedData>,
+    vulnerablePosition: Object<warnEndedData>,
   }
 }

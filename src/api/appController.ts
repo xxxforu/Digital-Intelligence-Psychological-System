@@ -8,34 +8,12 @@ export async function getLoginUser(
     ...(options || {}),
   });
 }
-
-// /** listAppByPage POST /api/app/list/page */
-// export async function listAppByPageUsingPost(
-//   body: API.AppQueryRequest,
-//   options?: { [key: string]: any },
-// ) {
-//   return request<API.BaseResponsePageApp_>('/api/app/list/page', {
-//     method: 'POST',
-//     headers: {
-//       'Content-Type': 'application/json',
-//     },
-//     data: body,
-//     ...(options || {}),
-//   });
-// }
-
-
-// /** listMyAppVOByPage POST /api/app/my/list/page/vo */
-// export async function listMyAppVoByPageUsingPost(
-//   body: API.AppQueryRequest,
-//   options?: { [key: string]: any },
-// ) {
-//   return request<API.BaseResponsePageAppVO_>('/api/app/my/list/page/vo', {
-//     method: 'POST',
-//     headers: {
-//       'Content-Type': 'application/json',
-//     },
-//     data: body,
-//     ...(options || {}),
-//   });
-// }
+// 退出登录
+export async function logoutPOST() {
+    return request('/logout', {
+        method: "POST",
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
+}

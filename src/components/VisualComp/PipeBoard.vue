@@ -32,6 +32,11 @@ export default defineComponent({
             type: Number,
             required: false
         },
+        bgWhite: {
+            type: Boolean,
+            default: false,
+            required: false
+        },
         boxWidth: Number,
         boxHeight: Number,
         currentType: Number,
@@ -146,8 +151,8 @@ export default defineComponent({
                         }],
                         detail: {
                             fontSize: 14,
-                            color: '#fff',
-                            formatter: formatter
+                            color: props.bgWhite ? '#000' : '#fff',
+                            formatter: props.bgWhite ? '{value}%' : formatter
                         }
                     }
                 ]

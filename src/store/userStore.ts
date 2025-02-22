@@ -11,6 +11,7 @@ export const useLoginUserStore = defineStore("loginUser", () => {
     name: "未登录",
     role:ACCESS_ENUM.NOT_LOGIN
   });
+ 
 
   function setLoginUser(newLoginUser: API.LoginUserVO) {
     loginUser.value = newLoginUser;
@@ -26,4 +27,6 @@ export const useLoginUserStore = defineStore("loginUser", () => {
   }
 
   return { loginUser, setLoginUser, fetchLoginUser };
+}, {
+   persist: true// 开启持久化
 });
